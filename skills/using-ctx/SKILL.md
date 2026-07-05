@@ -24,7 +24,8 @@ Every session, before ANY response:
 4. Determine task type: UI, backend, bug fix, new feature, refactor, docs
 5. Load ONLY the relevant knowledge pages from `.ctx/pages/`:
    - Bug fix: `mistakes.md`
-   - UI work: `design.md` + `patterns.md`
+   - UI work: `design.md` + `patterns.md`; then follow the design-intelligence
+     skill's loading rule (one style page + picked palette/fonts only)
    - Backend: `patterns.md`
    - New feature: `patterns.md` + `design.md`
    - Any task: check `mistakes.md` if doing something similar to a past failure
@@ -256,15 +257,7 @@ efficient-code is always active. It's not invoked - it's a stance.
 
 ## Platform Adaptation
 
-Skills describe actions, not tool names. Each platform maps actions to its tools:
-
-- Claude Code / Cursor: see `references/claude-code-tools.md`
-- Codex: see `references/codex-tools.md`
-- Gemini CLI: see `references/gemini-tools.md`
-- Copilot CLI: see `references/copilot-tools.md`
-- Windsurf: see `references/windsurf-tools.md`
-- Antigravity: see `references/antigravity-tools.md`
-- Other platforms: see `references/universal-tools.md`
+Skills describe actions, not tool names. Per-platform tool mappings: see references/*-tools.md - claude-code (also Cursor), codex, gemini, copilot, windsurf, antigravity, universal
 
 ## The Non-Negotiables
 

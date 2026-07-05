@@ -10,7 +10,7 @@ One plugin replaces superpowers + ponytail + ui-ux-pro-max. Works on any coding 
 
 - **Reasoning**: brainstorming, planning, TDD, debugging, verification, code review, subagent dispatch
 - **Efficient code**: YAGNI, stdlib first, shortest diff, no bloat (always active)
-- **Design intelligence**: never boring UI, intentional design choices
+- **Design intelligence**: data-backed, not vibes - 8 style catalogs with real CSS recipes, 12 curated palettes, 10 font pairings, motion recipes; mandatory per-project design identity and an anti-generic gate that blocks template-looking UI
 - **Project memory**: `.ctx/` folder with compressed conversations, knowledge pages, page-index tree
 - **Smart loading**: index-then-load - reads ~80 lines on start, pulls knowledge on demand
 - **Continuity engine**: three-layer state protection - step-cadence `wip.md` checkpoints, deliberate flush at ~80% context pressure, PreCompact/SessionStart hooks on Claude Code. Sessions survive compaction, crashes, and agent handoffs
