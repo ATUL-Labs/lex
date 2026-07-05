@@ -89,3 +89,48 @@ test('session endpoint reads sessions dir with name guard', async () => {
     assert.equal((await fetch(base + '/api/session?name=nope.md')).status, 404);
   });
 });
+
+test('activity endpoint reflects the live marker', async () => {
+  const root = makeProject();
+  fs.writeFileSync(path.join(root, '.ctx', 'live.json'), JSON.stringify({ file: 'src/app.js', tool: 'Edit', ts: Date.now() }));
+  await withServer(root, async (base) => {
+    const a = await (await fetch(base + '/api/activity')).json();
+    assert.equal(a.file, 'src/app.js');
+    assert.equal(a.tool, 'Edit');
+    assert.ok(typeof a.ts === 'number');
+  });
+});
+
+test('activity endpoint returns empty object when no marker exists', async () => {
+  await withServer(makeProject(), async (base) => {
+    const a = await (await fetch(base + '/api/activity')).json();
+    assert.deepEqual(a, {});
+  });
+});
+
+test('schema endpoint returns tables with nested columns and fk info', async () => {
+  const root = makeProject();
+  fs.mkdirSync(path.join(root, 'database', 'migrations'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'database', 'migrations', 'create_items.php'), [
+    '<?php',
+    "Schema::create('items', function (Blueprint $table) {",
+    "  $table->string('name');",
+    "  $table->foreignId('owner_id')->constrained();",
+    '});',
+  ].join('\n'));
+  await withServer(root, async (base) => {
+    await fetch(base + '/api/overview');
+    const s = await (await fetch(base + '/api/schema')).json();
+    const items = s.tables.find(t => t.name === 'items');
+    assert.ok(items);
+    const owner = items.columns.find(c => c.name === 'owner_id');
+    assert.equal(owner.fkTable, 'owners');
+  });
+});
+
+test('schema endpoint returns empty tables when no schema data indexed', async () => {
+  await withServer(makeProject(), async (base) => {
+    const s = await (await fetch(base + '/api/schema')).json();
+    assert.deepEqual(s.tables, []);
+  });
+});

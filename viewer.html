@@ -103,6 +103,34 @@
     padding-left: 12px;
     border-left: 1px solid var(--panel-border);
   }
+  .agent-activity {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    padding-left: 12px;
+    border-left: 1px solid var(--panel-border);
+    max-width: 320px;
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+  .agent-activity.show { opacity: 1; }
+  .agent-activity-dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(77,227,255,0.5);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  .agent-activity-file {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
   .grid {
     display: grid;
@@ -119,9 +147,10 @@
   .panel-now { grid-column: 1; grid-row: 1 / 3; }
   .panel-codebase { grid-column: 2; grid-row: 1; }
   .panel-graph { grid-column: 2; grid-row: 2; }
-  .panel-memory { grid-column: 1 / 3; grid-row: 3; }
+  .panel-schema { grid-column: 1 / 3; grid-row: 3; }
+  .panel-memory { grid-column: 1 / 3; grid-row: 4; }
   @media (max-width: 1099px) {
-    .panel-now, .panel-codebase, .panel-graph, .panel-memory {
+    .panel-now, .panel-codebase, .panel-graph, .panel-schema, .panel-memory {
       grid-column: 1;
       grid-row: auto;
     }
@@ -332,6 +361,26 @@
   .graph-ref.ref-route { color: var(--accent); }
   .graph-ref.ref-consumer { color: var(--accent-2); }
 
+  .schema-empty { color: var(--dim); font-family: var(--mono); font-size: 12.5px; padding: 20px 0; text-align: center; }
+  .schema-filter { width: 100%; margin-bottom: 10px; }
+  .schema-wrap { position: relative; }
+  .schema-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  .schema-cards { display: flex; flex-wrap: wrap; gap: 14px; position: relative; }
+  .schema-card {
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.015);
+    min-width: 180px;
+    flex: 0 0 auto;
+    padding: 10px 12px;
+  }
+  .schema-card.hidden { display: none; }
+  .schema-card-title { font-family: var(--mono); font-size: 12.5px; color: var(--ink); font-weight: 700; margin-bottom: 6px; }
+  .schema-col { font-family: var(--mono); font-size: 11px; padding: 2px 0; display: flex; gap: 6px; align-items: baseline; }
+  .schema-col-name { color: var(--ink); }
+  .schema-col-type { color: var(--dim); }
+  .schema-col-fk { color: var(--accent); white-space: nowrap; }
+
   .tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--panel-border); }
   .tab-btn {
     background: transparent;
@@ -462,6 +511,7 @@
   </div>
   <span class="freshness" id="freshness"></span>
   <span class="version" id="version">v0.0.0</span>
+  <span class="agent-activity" id="agent-activity"><span class="agent-activity-dot"></span><span class="agent-activity-file" id="agent-activity-file"></span></span>
 </header>
 
 <main class="grid">
@@ -487,6 +537,14 @@
     <h2>Graph</h2>
     <input class="search-box graph-filter" id="graph-filter" type="text" placeholder="filter by url...">
     <div id="graph-content"><div class="graph-empty">no API links indexed</div></div>
+  </section>
+
+  <section class="panel panel-schema fade-up" style="animation-delay:125ms">
+    <h2>Schema</h2>
+    <input class="search-box schema-filter" id="schema-filter" type="text" placeholder="filter by table name...">
+    <div class="schema-wrap" id="schema-wrap">
+      <div id="schema-content"><div class="schema-empty">no schema detected (no migrations or SQL files indexed)</div></div>
+    </div>
   </section>
 
   <section class="panel panel-memory fade-up" style="animation-delay:150ms">
@@ -534,6 +592,8 @@ var state = {
   refreshedAt: null,
   graphRows: [],
   seenActivityKeys: null,
+  schemaTables: [],
+  schemaFetchedAt: 0,
 };
 
 function qs(id) { return document.getElementById(id); }
@@ -964,7 +1024,7 @@ function renderGraph(rows, filterQuery) {
     host.appendChild(textEl('div', 'no matching links', 'graph-empty'));
     return;
   }
-  var capped = groups.slice(0, 40);
+  var capped = groups.slice(0, 500);
   var overflow = groups.length - capped.length;
 
   var body = textEl('div', null, 'graph-body');
@@ -989,6 +1049,114 @@ function fetchLinks(force) {
     .then(function (data) {
       state.graphRows = data.rows || [];
       renderGraph(state.graphRows, qs('graph-filter').value);
+    })
+    .catch(function () {});
+}
+
+// ---------- schema ERD ----------
+function renderSchemaCard(table) {
+  var card = textEl('div', null, 'schema-card');
+  card.dataset.table = table.name;
+  card.appendChild(textEl('div', table.name, 'schema-card-title'));
+  table.columns.forEach(function (col) {
+    var row = textEl('div', null, 'schema-col');
+    row.appendChild(textEl('span', col.name, 'schema-col-name'));
+    row.appendChild(textEl('span', col.type || '', 'schema-col-type'));
+    if (col.fkTable) {
+      row.appendChild(textEl('span', '→ ' + col.fkTable, 'schema-col-fk'));
+    }
+    card.appendChild(row);
+  });
+  return card;
+}
+
+function drawSchemaLines(tables) {
+  var wrap = qs('schema-wrap');
+  var svg = wrap.querySelector('.schema-lines');
+  if (svg) svg.remove();
+  var wrapRect = wrap.getBoundingClientRect();
+  svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'schema-lines');
+  svg.setAttribute('width', wrapRect.width);
+  svg.setAttribute('height', wrapRect.height);
+
+  var byName = {};
+  tables.forEach(function (t) { byName[t.name] = t; });
+
+  wrap.querySelectorAll('.schema-card').forEach(function (card) {
+    if (card.classList.contains('hidden')) return;
+    var tableName = card.dataset.table;
+    var table = byName[tableName];
+    if (!table) return;
+    table.columns.forEach(function (col) {
+      if (!col.fkTable || !byName[col.fkTable]) return;
+      var targetCard = wrap.querySelector('.schema-card[data-table="' + CSS.escape(col.fkTable) + '"]');
+      if (!targetCard || targetCard.classList.contains('hidden')) return;
+      var a = card.getBoundingClientRect();
+      var b = targetCard.getBoundingClientRect();
+      var x1 = a.left + a.width / 2 - wrapRect.left;
+      var y1 = a.top + a.height / 2 - wrapRect.top;
+      var x2 = b.left + b.width / 2 - wrapRect.left;
+      var y2 = b.top + b.height / 2 - wrapRect.top;
+      var midY = (y1 + y2) / 2;
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M ' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + midY + ', ' + x2 + ' ' + midY + ', ' + x2 + ' ' + y2);
+      path.setAttribute('stroke', 'rgba(77,227,255,0.35)');
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('fill', 'none');
+      svg.appendChild(path);
+    });
+  });
+
+  wrap.appendChild(svg);
+}
+
+function renderSchema(tables, filterQuery) {
+  var host = qs('schema-content');
+  clear(host);
+  var wrap = qs('schema-wrap');
+  var oldLines = wrap.querySelector('.schema-lines');
+  if (oldLines) oldLines.remove();
+
+  if (!tables.length) {
+    host.appendChild(textEl('div', 'no schema detected (no migrations or SQL files indexed)', 'schema-empty'));
+    return;
+  }
+
+  var q = (filterQuery || '').trim().toLowerCase();
+  var cards = textEl('div', null, 'schema-cards');
+  tables.forEach(function (table) {
+    var card = renderSchemaCard(table);
+    if (q && table.name.toLowerCase().indexOf(q) === -1) {
+      card.classList.add('hidden');
+    }
+    cards.appendChild(card);
+  });
+  host.appendChild(cards);
+
+  requestAnimationFrame(function () { drawSchemaLines(tables); });
+}
+
+qs('schema-filter').addEventListener('input', function (e) {
+  renderSchema(state.schemaTables, e.target.value);
+});
+
+window.addEventListener('resize', function () {
+  if (state.schemaTables.length) drawSchemaLines(state.schemaTables);
+});
+
+function fetchSchema(force) {
+  var now = Date.now();
+  if (!force && now - state.schemaFetchedAt < 30000) return;
+  state.schemaFetchedAt = now;
+  fetch('/api/schema')
+    .then(function (r) {
+      if (!r.ok) throw new Error('bad status');
+      return r.json();
+    })
+    .then(function (data) {
+      state.schemaTables = data.tables || [];
+      renderSchema(state.schemaTables, qs('schema-filter').value);
     })
     .catch(function () {});
 }
@@ -1338,11 +1506,35 @@ function tickLiveLabel() {
   setTimeout(function () { label.classList.remove('tick'); }, 400);
 }
 
+// ---------- live agent activity banner ----------
+function fetchActivity() {
+  fetch('/api/activity')
+    .then(function (r) {
+      if (!r.ok) throw new Error('bad status');
+      return r.json();
+    })
+    .then(function (data) {
+      var el = qs('agent-activity');
+      var fresh = data && data.file && (Date.now() - data.ts < 8000);
+      if (fresh) {
+        qs('agent-activity-file').textContent = 'writing ' + data.file;
+        el.classList.add('show');
+      } else {
+        el.classList.remove('show');
+      }
+    })
+    .catch(function () {});
+}
+
 fetchOverview();
 setInterval(fetchOverview, 2500);
 setInterval(renderFreshness, 1000);
+setInterval(fetchActivity, 2500);
+fetchActivity();
 fetchLinks(true);
 setInterval(function () { fetchLinks(false); }, 60000);
+fetchSchema(true);
+setInterval(function () { fetchSchema(false); }, 30000);
 </script>
 </body>
 </html>

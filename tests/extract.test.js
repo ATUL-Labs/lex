@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { isTextFile, shouldSkipDir, extractSymbols, extractLinks, normalizeUrl } = require('../lib/extract');
+const { isTextFile, shouldSkipDir, extractSymbols, extractLinks, extractSchema, normalizeUrl } = require('../lib/extract');
 
 test('isTextFile accepts code and md, rejects binaries and minified', () => {
   assert.equal(isTextFile('app/Models/User.php'), true);
@@ -67,4 +67,52 @@ test('normalizeUrl', () => {
   assert.equal(normalizeUrl('/a/:slug?x=1'), '/a/*');
   assert.equal(normalizeUrl('/t/${task.id}'), '/t/*');
   assert.equal(normalizeUrl('/'), '/');
+});
+
+test('extractSchema: Laravel migration with foreignId convention and explicit FK', () => {
+  const php = [
+    '<?php',
+    'return new class extends Migration {',
+    '  public function up()',
+    '  {',
+    "    Schema::create('manuscripts', function (Blueprint $table) {",
+    '      $table->id();',
+    "      $table->string('title');",
+    "      $table->foreignId('user_id')->constrained();",
+    "      $table->unsignedBigInteger('journal_id');",
+    "      $table->foreign('journal_id')->references('id')->on('journals');",
+    '    });',
+    '  }',
+    '};',
+  ].join('\n');
+  const s = extractSchema('database/migrations/2026_01_01_create_manuscripts.php', php);
+  assert.ok(s.tables.find(t => t.name === 'manuscripts'));
+  assert.ok(s.columns.find(c => c.name === 'title' && c.table === 'manuscripts'));
+  const userIdCol = s.columns.find(c => c.name === 'user_id');
+  assert.equal(userIdCol.fkTable, 'users');
+  assert.equal(userIdCol.fkColumn, 'id');
+  const journalIdCol = s.columns.find(c => c.name === 'journal_id');
+  assert.equal(journalIdCol.fkTable, 'journals');
+  assert.equal(journalIdCol.fkColumn, 'id');
+});
+
+test('extractSchema: generic SQL CREATE TABLE with FOREIGN KEY', () => {
+  const sql = [
+    'CREATE TABLE orders (',
+    '  id INT PRIMARY KEY,',
+    '  customer_id INT,',
+    '  FOREIGN KEY (customer_id) REFERENCES customers(id)',
+    ');',
+  ].join('\n');
+  const s = extractSchema('schema.sql', sql);
+  assert.ok(s.tables.find(t => t.name === 'orders'));
+  const col = s.columns.find(c => c.name === 'customer_id');
+  assert.equal(col.fkTable, 'customers');
+  assert.equal(col.fkColumn, 'id');
+});
+
+test('extractSchema: non-migration php returns empty', () => {
+  const s = extractSchema('app/Models/User.php', '<?php class User {}\n');
+  assert.equal(s.tables.length, 0);
+  assert.equal(s.columns.length, 0);
 });

@@ -12,11 +12,15 @@ fail() { FAIL=$((FAIL+1)); echo "FAIL - $1"; }
 TMP="$(mktemp -d)"
 mkdir -p "$TMP/.ctx" "$TMP/src"
 printf 'export function hookIndexedFn() {}\n' > "$TMP/src/new.ts"
-PAYLOAD="{\"tool_input\":{\"file_path\":\"$(printf '%s' "$TMP/src/new.ts" | sed 's/\\/\\\\/g')\"}}"
+WINTMP="$(cd "$TMP" && pwd -W 2>/dev/null || pwd)"
+PAYLOAD="{\"tool_input\":{\"file_path\":\"$(printf '%s' "$WINTMP/src/new.ts" | sed 's/\\/\\\\/g')\"}}"
 OUT="$(cd "$TMP" && printf '%s' "$PAYLOAD" | CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash "$HOOK")"
 [ "$(printf '%s' "$OUT" | tail -1)" = "{}" ] && ok "outputs {}" || fail "outputs {} (got: $OUT)"
 FOUND="$(cd "$TMP" && node "$PLUGIN_ROOT/bin/ctx.js" search hookIndexedFn)"
 printf '%s' "$FOUND" | grep -q "src/new.ts" && ok "file indexed via hook" || fail "file indexed via hook"
+LIVE="$TMP/.ctx/live.json"
+[ -f "$LIVE" ] && ok "live.json created" || fail "live.json created"
+grep -q "src/new.ts" "$LIVE" 2>/dev/null && ok "live.json contains touched file" || fail "live.json contains touched file"
 
 # Fixture 2: no .ctx - silent no-op, exit 0
 TMP2="$(mktemp -d)"

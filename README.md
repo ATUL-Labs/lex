@@ -112,6 +112,7 @@ The plugin activates automatically every session. The agent will:
 Requires Node 22+. From anywhere inside a ctx project:
 
 ```bash
+node <ctx-repo>/bin/ctx.js init [dir]                # scaffold .ctx/ from templates
 node <ctx-repo>/bin/ctx.js search userTask overdue   # full-text, 10 lines max
 node <ctx-repo>/bin/ctx.js symbols src/App.tsx       # symbol list without reading the file
 node <ctx-repo>/bin/ctx.js links dashboard/tasks     # route + every frontend consumer
@@ -133,7 +134,7 @@ node <ctx-repo>/bin/ctx.js serve        # defaults to port 4747
 node <ctx-repo>/bin/ctx.js serve 3000   # custom port
 ```
 
-Displays live status (project name, agent activity, version), current task list from `wip.md`, all knowledge pages with markdown rendering, full-text search, and index statistics. The API-to-frontend link graph is grouped by route/consumer pairing, filterable by URL substring, and color-coded by HTTP method. Activity timeline reverses audit log entries and groups by date. File preview drawer with symbol outline on demand. Read-only and localhost-bound - never modifies your project.
+Displays live status (project name, agent activity, version), current task list from `wip.md`, all knowledge pages with markdown rendering, full-text search, and index statistics. The API-to-frontend link graph is grouped by route/consumer pairing, filterable by URL substring, and color-coded by HTTP method. Activity timeline reverses audit log entries and groups by date. File preview drawer with symbol outline on demand. Live activity panel shows when an agent is writing to the project. Database schema panel displays tables, columns, and foreign key relationships extracted from migrations and SQL files. Read-only and localhost-bound - never modifies your project.
 
 ---
 

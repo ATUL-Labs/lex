@@ -41,6 +41,7 @@ function main() {
   const [cmd, ...args] = process.argv.slice(2);
   if (cmd === 'hook-update') return hookUpdate();
   if (cmd === 'docs') return docsCmd(args);
+  if (cmd === 'init') return initCmd(args[0] || process.cwd());
   const root = findRoot(process.cwd());
   if (!root) { process.stderr.write('no .ctx folder found - initialize ctx first\n'); process.exit(1); }
   const db = openDb(root);
@@ -74,9 +75,61 @@ function main() {
     });
     return;
   } else {
-    process.stderr.write('usage: ctx <refresh|search <terms>|symbols <file>|links <url>|docs [terms]|update <file>|serve [port]|hook-update>\n');
+    process.stderr.write('usage: ctx <init [dir]|refresh|search <terms>|symbols <file>|links <url>|docs [terms]|update <file>|serve [port]|hook-update>\n');
     process.exit(1);
   }
+}
+
+function initCmd(dir) {
+  const pluginRoot = path.join(__dirname, '..');
+  const templates = path.join(pluginRoot, 'templates');
+  const ctx = path.join(dir, '.ctx');
+  const created = [];
+  const skipped = [];
+  const missing = [];
+
+  fs.mkdirSync(ctx, { recursive: true });
+  fs.mkdirSync(path.join(ctx, 'pages'), { recursive: true });
+  const sessionsDir = path.join(ctx, 'sessions');
+  if (!fs.existsSync(sessionsDir)) {
+    fs.mkdirSync(sessionsDir, { recursive: true });
+    fs.writeFileSync(path.join(sessionsDir, '.gitkeep'), '');
+    created.push('.ctx/sessions/');
+  }
+
+  const copyIfMissing = (src, dest, label) => {
+    if (fs.existsSync(dest)) { skipped.push(label); return; }
+    if (!fs.existsSync(src)) { missing.push(label); return; }
+    fs.copyFileSync(src, dest);
+    created.push(label);
+  };
+
+  copyIfMissing(path.join(templates, 'STATUS.md'), path.join(ctx, 'status.md'), '.ctx/status.md');
+  copyIfMissing(path.join(templates, 'INDEX.md'), path.join(ctx, 'INDEX.md'), '.ctx/INDEX.md');
+
+  let pageFiles = [];
+  try { pageFiles = fs.readdirSync(path.join(templates, 'pages')).filter(f => f.endsWith('.md')); } catch {}
+  for (const f of pageFiles) {
+    copyIfMissing(path.join(templates, 'pages', f), path.join(ctx, 'pages', f), '.ctx/pages/' + f);
+  }
+
+  const giPath = path.join(dir, '.gitignore');
+  const needed = ['.ctx/index.db*', '.ctx/live.json'];
+  let gi = '';
+  try { gi = fs.readFileSync(giPath, 'utf8'); } catch {}
+  let giChanged = false;
+  for (const line of needed) {
+    if (!gi.split('\n').some(l => l.trim() === line)) {
+      gi += (gi.endsWith('\n') || gi === '' ? '' : '\n') + line + '\n';
+      giChanged = true;
+    }
+  }
+  if (giChanged) { fs.writeFileSync(giPath, gi); created.push('.gitignore entries'); }
+
+  if (created.length) process.stdout.write('created: ' + created.join(', ') + '\n');
+  if (skipped.length) process.stdout.write('already present (untouched): ' + skipped.join(', ') + '\n');
+  if (missing.length) process.stderr.write('warning: plugin templates missing (reinstall ctx?): ' + missing.join(', ') + '\n');
+  process.stdout.write('next: run "node ' + pluginRoot + '/bin/ctx.js serve" for the live viewer\n');
 }
 
 function hookUpdate() {
@@ -85,11 +138,18 @@ function hookUpdate() {
   try {
     const input = JSON.parse(raw);
     const file = input.tool_input && input.tool_input.file_path;
+    const tool = input.tool_name || 'edit';
     if (file) {
       const root = findRoot(path.dirname(file)) || findRoot(process.cwd());
       if (root) {
         const rel = path.relative(root, file);
-        if (rel && !rel.startsWith('..')) updateFile(openDb(root), root, rel);
+        if (rel && !rel.startsWith('..')) {
+          updateFile(openDb(root), root, rel);
+          try {
+            const relPosix = rel.split(path.sep).join('/');
+            fs.writeFileSync(path.join(root, '.ctx', 'live.json'), JSON.stringify({ file: relPosix, tool, ts: Date.now() }));
+          } catch {}
+        }
       }
     }
   } catch {}

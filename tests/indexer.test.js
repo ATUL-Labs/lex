@@ -118,3 +118,21 @@ test('refreshDocs is incremental and sweeps deleted sheets', () => {
   assert.equal(r.removed, 1);
   assert.equal(db.prepare('SELECT COUNT(*) c FROM files').get().c, 0);
 });
+
+test('refresh extracts schema tables and columns from migrations', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ctxschema-'));
+  fs.mkdirSync(path.join(root, '.ctx'), { recursive: true });
+  fs.mkdirSync(path.join(root, 'database', 'migrations'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'database', 'migrations', 'create_posts.php'), [
+    '<?php',
+    "Schema::create('posts', function (Blueprint $table) {",
+    "  $table->string('title');",
+    "  $table->foreignId('author_id')->constrained();",
+    '});',
+  ].join('\n'));
+  const db = openDb(root);
+  refresh(db, root);
+  assert.ok(db.prepare("SELECT 1 FROM schema_tables WHERE name = 'posts'").get());
+  const col = db.prepare("SELECT * FROM schema_columns WHERE table_name = 'posts' AND name = 'author_id'").get();
+  assert.equal(col.fk_table, 'authors');
+});
