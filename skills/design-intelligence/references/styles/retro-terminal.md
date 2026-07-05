@@ -18,8 +18,8 @@ screen, not a modern app wearing a green filter.
   --rt-bg: #0a0a0a;
   --rt-green: #33ff66;         /* phosphor green */
   --rt-amber: #ffb000;         /* phosphor amber - pick ONE family per screen */
-  --rt-green-dim: #1a8033;     /* green at reduced emphasis, secondary text */
-  --rt-amber-dim: #995e00;     /* amber at reduced emphasis */
+  --rt-green-dim: #2bcc55;     /* green at reduced emphasis, secondary text - 9.3:1 on --rt-bg */
+  --rt-amber-dim: #cc8f00;     /* amber at reduced emphasis - 7.1:1 on --rt-bg */
   --rt-font: 'IBM Plex Mono', 'JetBrains Mono', monospace;
   --rt-measure: 70ch;          /* 60-80ch range */
   --rt-glow: 0 0 4px currentColor;
@@ -35,7 +35,7 @@ screen, not a modern app wearing a green filter.
 - Type: monospace only, name exactly one of IBM Plex Mono or JetBrains Mono. Base size 15-16px, line-height 1.5-1.6 to keep long text blocks readable at fixed width.
 - Content width: 60-80ch max, matching real terminal line-wrap behavior - never full-bleed text.
 - Dividers: ASCII or box-drawing characters (─, ═, ├) rendered as literal text content, not CSS borders, to keep the terminal-authenticity.
-- Contrast: body text at full phosphor color reads as fatiguing over long passages - drop non-critical text to the dim variant (--rt-green-dim / --rt-amber-dim) and reserve full brightness for prompts, links, and active state.
+- Contrast: the dim tokens (--rt-green-dim / --rt-amber-dim) are calibrated to clear 4.5:1 on --rt-bg, so body copy can use them for long passages without fatigue or failing accessibility; reserve full-brightness phosphor for prompts, links, and active state, and use dim for anything secondary (labels, metadata, dividers).
 
 ## Component recipes
 
@@ -65,4 +65,4 @@ body::after {
 - Rounded corners, drop shadows, or card chrome on containers: modern UI chrome breaks the flat CRT illusion.
 - Smooth fade-in/fade-out cursor blink: the cursor must hard-cut with steps(2), a smooth transition reads as a loading spinner instead.
 - Body copy at full-brightness glow color for long passages: causes eye fatigue, use the dim variant for anything beyond a line or two.
-- Dim text tiers (#1a8033, #995e00) sit under 4.5:1 contrast on #0a0a0a - never use them for body copy, labels and metadata only.
+- Dim tokens (#2bcc55, #cc8f00) are the accessibility floor - they clear 4.5:1 on #0a0a0a and are safe for body copy; do not darken them further or contrast will drop below that floor.

@@ -122,6 +122,28 @@ Large legacy folders: list path prefixes in `.ctx/ignore` (one per line) to excl
 
 ---
 
+## Optional: code graph upgrade
+
+ctx-index answers "where is X used" with text search. For true call-graphs,
+dead-code detection, and trace-paths on large codebases, add the MIT-licensed
+[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) (single
+static binary, zero dependencies, fully local):
+
+```bash
+# macOS / Linux (auto-detects and configures Claude Code and other agents)
+curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash
+```
+
+```powershell
+# Windows
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.ps1 -OutFile install.ps1; .\install.ps1
+```
+
+ctx works fully without it - the skills tell agents to prefer the graph when
+it is connected and fall back to `ctx search`, then grep, when it is not.
+
+---
+
 ## How It Works
 
 ### The `.ctx/` folder (per-project)

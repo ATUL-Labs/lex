@@ -100,6 +100,10 @@ ask the user to re-explain. Do not re-derive what the files already say.
 The plugin ships a self-maintaining SQLite index (`.ctx/index.db`, regenerable,
 gitignored). When node is available, prefer one index query over grep-and-read chains:
 
+Structural-query ladder: if a code-graph MCP (e.g. codebase-memory-mcp) is
+connected, use it for call-graphs, dead code, and trace-paths; for
+where-is-X and references use `ctx search`; if node is unavailable, grep.
+
 - Where is something: `node "<plugin-root>/bin/ctx.js" search <terms>` (10 lines max)
 - Search terms are ANDed - prefer one distinctive term over several common ones.
 - What is in a file: `node "<plugin-root>/bin/ctx.js" symbols <file>` (skip reading whole files)
@@ -257,7 +261,7 @@ efficient-code is always active. It's not invoked - it's a stance.
 
 ## Platform Adaptation
 
-Skills describe actions, not tool names. Per-platform tool mappings: see references/*-tools.md - claude-code (also Cursor), codex, gemini, copilot, windsurf, antigravity, universal
+Skills describe actions, not tool names. Per-platform tool mappings: see references/*-tools.md - claude-code (also Cursor), codex, gemini, copilot, windsurf, antigravity, trae, universal
 
 ## The Non-Negotiables
 

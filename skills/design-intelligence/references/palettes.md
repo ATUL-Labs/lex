@@ -1,30 +1,34 @@
 # Palettes
 
 Pick ONE palette. The accent appears on under 15% of any screen. Never introduce a fifth color mid-project.
+Ratio legend: every "Ratios" line lists percentages in this fixed order -
+dominant surface / text ink / accent / warn - regardless of the order hexes
+are listed in on the line above (hexes are listed by role name, so check the
+label, not position).
 
 ## Inkwell (calm authority - SaaS, docs, fintech)
 #10283A ink | #F7F9FA paper | #0E7C6E accent | #E8B14D warn
-Ratios 60/25/12/3. Dark: paper->#0F1720, ink->#E6EDF3, accent unchanged.
+Ratios (paper/ink/accent/warn) 60/25/12/3. Dark: paper->#0F1720, ink->#E6EDF3, accent unchanged.
 
 ## Harbor Slate (calm authority - enterprise dashboards)
 #1E293B ink | #F8FAFC paper | #2563EB accent | #DC2626 warn
-Ratios 55/30/12/3. Dark: paper->#0F172A, ink->#E2E8F0, accent->#3B82F6.
+Ratios (paper/ink/accent/warn) 55/30/12/3. Dark: paper->#0F172A, ink->#E2E8F0, accent->#3B82F6.
 
 ## Quiet Ledger (calm authority - accounting, legal)
 #233238 ink | #FAF9F6 paper | #4C7A73 accent | #B4533C warn
-Ratios 58/28/11/3. Dark: paper->#141C1F, ink->#E8ECE9, accent->#6B9A92.
+Ratios (paper/ink/accent/warn) 58/28/11/3. Dark: paper->#141C1F, ink->#E8ECE9, accent->#6B9A92.
 
 ## Signal Flare (bold saturated - marketing, launch pages)
 #0B0B0F ink | #FFFFFF paper | #FF3B30 accent | #FFCC00 warn
-Ratios 20/60/17/3. Dark: paper->#0B0B0F, ink->#F5F5F7, accent unchanged.
+Ratios (paper/ink/accent/warn) 62/20/15/3. Dark: paper->#0B0B0F, ink->#F5F5F7, accent unchanged.
 
 ## Voltage (bold saturated - gaming, dev tools)
 #12121A ink | #F4F4F8 paper | #7C3AED accent | #F59E0B warn
-Ratios 22/58/17/3. Dark: paper->#0A0A12, ink->#EDEDF5, accent->#9D5CF5.
+Ratios (paper/ink/accent/warn) 60/22/15/3. Dark: paper->#0A0A12, ink->#EDEDF5, accent->#9D5CF5.
 
 ## Riot Citrus (bold saturated - youth brands, events)
 #1A1A1A ink | #FFFFFF paper | #FF5A36 accent | #2DD4BF warn
-Ratios 18/62/17/3. Dark: paper->#161616, ink->#F2F2F2, accent unchanged.
+Ratios (paper/ink/accent/warn) 64/18/15/3. Dark: paper->#161616, ink->#F2F2F2, accent unchanged.
 
 ## Terracotta Field (earthy warm - hospitality, wellness)
 #3B2A21 ink | #FBF3EA paper | #C1663B accent | #7A8B5C warn

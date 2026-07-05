@@ -47,7 +47,7 @@ tile size, not from color or type tricks.
   grid-template-columns: repeat(4, 1fr);
   grid-template-areas:
     "hero hero wide wide"
-    "hero hero small small";
+    "hero hero sm-a sm-b";
 }
 .bt-tile {
   background: var(--bt-tile-bg); border-radius: var(--bt-radius); box-shadow: var(--bt-shadow);
@@ -55,7 +55,7 @@ tile size, not from color or type tricks.
 }
 .bt-tile:hover { transform: translateY(-3px); box-shadow: var(--bt-shadow-hover); }
 .bt-hero { grid-area: hero; } .bt-wide { grid-area: wide; }
-.bt-small { grid-area: small; }
+.bt-sm-a { grid-area: sm-a; } .bt-sm-b { grid-area: sm-b; }
 .bt-tile h3 { font-size: 18px; font-weight: 700; color: var(--bt-ink); margin: 0 0 4px; }
 .bt-tile p  { font-size: 14px; color: var(--bt-muted); margin: 0; }
 ```

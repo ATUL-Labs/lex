@@ -40,13 +40,19 @@ Every LATER UI task: load `.ctx/pages/design.md` FIRST. The project identity
 overrides the library. Never propose a new direction mid-project unless the
 user asks for a redesign.
 
+Brownfield projects (existing UI): do not propose a new direction - derive design.md
+from the current interface (its actual tokens, type, spacing) and confirm it with the
+user. If the user is unreachable (autonomous runs), write the proposal to design.md
+marked `status: provisional` and flag it for approval instead of stalling.
+
 ## Loading Rule
 
 Load at most: project design.md + ONE style page + the palette and font
-entries you picked. Never bulk-load the references directory. Style pages
-live in references/styles/ (neobrutalism, glassmorphism, brutalism,
-editorial, swiss, claymorphism, bento, retro-terminal); palettes,
-font-pairings, and motion are single files beside it.
+entries you picked, + motion.md when the task involves animation or
+transitions. Never bulk-load the references directory. Style pages live in
+references/styles/ (neobrutalism, glassmorphism, brutalism, editorial,
+swiss, claymorphism, bento, retro-terminal); palettes, font-pairings, and
+motion are single files beside it.
 
 ## Principles
 
