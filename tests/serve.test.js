@@ -63,3 +63,29 @@ test('links endpoint and root html respond', async () => {
     assert.match(html, /ctx viewer/i);
   });
 });
+
+test('file endpoint serves only indexed paths', async () => {
+  const root = makeProject();
+  await withServer(root, async (base) => {
+    await fetch(base + '/api/search?q=serveTestFn'); // forces index refresh
+    const f = await (await fetch(base + '/api/file?path=src/app.js')).json();
+    assert.match(f.text, /serveTestFn/);
+    assert.equal((await fetch(base + '/api/file?path=.ctx/audit.log')).status, 404);
+    assert.equal((await fetch(base + '/api/file?path=../outside.js')).status, 404);
+    assert.equal((await fetch(base + '/api/file?path=C:/Windows/win.ini')).status, 404);
+    const s = await (await fetch(base + '/api/symbols?path=src/app.js')).json();
+    assert.ok(s.rows.some(r => r.name === 'serveTestFn'));
+  });
+});
+
+test('session endpoint reads sessions dir with name guard', async () => {
+  const root = makeProject();
+  fs.mkdirSync(path.join(root, '.ctx', 'sessions'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.ctx', 'sessions', '2026-07-03.md'), 'SESSION_BODY_MARKER\n');
+  await withServer(root, async (base) => {
+    const s = await (await fetch(base + '/api/session?name=2026-07-03.md')).json();
+    assert.match(s.text, /SESSION_BODY_MARKER/);
+    assert.equal((await fetch(base + '/api/session?name=..%2Fstatus.md')).status, 400);
+    assert.equal((await fetch(base + '/api/session?name=nope.md')).status, 404);
+  });
+});

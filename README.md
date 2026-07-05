@@ -133,7 +133,7 @@ node <ctx-repo>/bin/ctx.js serve        # defaults to port 4747
 node <ctx-repo>/bin/ctx.js serve 3000   # custom port
 ```
 
-Shows live status (project name, agent activity, version), the current task list from `wip.md`, all knowledge pages, the audit trail of actions, index statistics, and full-text search. Includes an interactive API-to-frontend link map. The viewer is read-only and localhost-bound - it never modifies your project.
+Displays live status (project name, agent activity, version), current task list from `wip.md`, all knowledge pages with markdown rendering, full-text search, and index statistics. The API-to-frontend link graph is grouped by route/consumer pairing, filterable by URL substring, and color-coded by HTTP method. Activity timeline reverses audit log entries and groups by date. File preview drawer with symbol outline on demand. Read-only and localhost-bound - never modifies your project.
 
 ---
 
