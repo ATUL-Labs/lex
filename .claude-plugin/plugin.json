@@ -1,7 +1,7 @@
 {
   "name": "ctx",
-  "description": "Universal coding companion - reasoning, efficient code, design intelligence, project memory, crash recovery. Replaces superpowers + ponytail + ui-ux-pro-max.",
-  "version": "0.1.9",
+  "description": "The shared brain for developers who work across many AI coding agents - continuity, project memory, structural index, design intelligence, crash recovery.",
+  "version": "0.1.10",
   "author": {
     "name": "pulak-ranjan",
     "url": "https://github.com/pulak-ranjan"

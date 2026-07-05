@@ -7,6 +7,21 @@ const os = require('node:os');
 const { openDb, openDbAt, refresh, refreshDocs, updateFile, ftsRows } = require('../lib/indexer');
 const { normalizeUrl } = require('../lib/extract');
 
+function serveWithPortFallback(server, port, maxPort) {
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE' && port < maxPort) {
+      port += 1;
+      server.listen(port, '127.0.0.1');
+    } else {
+      process.stderr.write('ctx serve: ' + err.message + '\n');
+      process.exit(1);
+    }
+  });
+  server.listen(port, '127.0.0.1', () => {
+    process.stdout.write('ctx viewer: http://127.0.0.1:' + port + '\n');
+  });
+}
+
 function findRoot(from) {
   let dir = from;
   for (;;) {
@@ -70,9 +85,7 @@ function main() {
     updateFile(db, root, path.relative(root, path.resolve(root, args[0])));
   } else if (cmd === 'serve') {
     const port = parseInt(args[0], 10) || 4747;
-    require('../lib/serve').createServer(root).listen(port, '127.0.0.1', () => {
-      process.stdout.write('ctx viewer: http://127.0.0.1:' + port + '\n');
-    });
+    serveWithPortFallback(require('../lib/serve').createServer(root), port, port + 8);
     return;
   } else {
     process.stderr.write('usage: ctx <init [dir]|refresh|search <terms>|symbols <file>|links <url>|docs [terms]|update <file>|serve [port]|hook-update>\n');

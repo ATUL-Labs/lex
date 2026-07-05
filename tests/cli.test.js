@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { execFileSync } = require('node:child_process');
+const { execFileSync, spawn } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
@@ -94,4 +94,37 @@ test('multi-term search falls back to OR when AND has no hits', () => {
   run(root, ['refresh']);
   const out = run(root, ['search', 'moveTask', 'zzznonexistenttermzzz']);
   assert.match(out, /src\/Tasks\.tsx/);
+});
+
+function spawnServe(root, port) {
+  return new Promise((resolve, reject) => {
+    const child = spawn('node', [CLI, 'serve', String(port)], { cwd: root });
+    let out = '';
+    const onData = (chunk) => {
+      out += chunk;
+      const m = out.match(/ctx viewer: http:\/\/127\.0\.0\.1:(\d+)/);
+      if (m) { child.stdout.removeListener('data', onData); resolve({ child, port: Number(m[1]) }); }
+    };
+    child.stdout.on('data', onData);
+    child.once('error', reject);
+    setTimeout(() => reject(new Error('serve did not print a URL in time')), 5000);
+  });
+}
+
+test('serve falls back to the next free port when the requested one is taken', async () => {
+  const rootA = makeProject();
+  const rootB = makeProject();
+  const requested = 41000 + Math.floor(Math.random() * 500);
+  const first = await spawnServe(rootA, requested);
+  try {
+    assert.equal(first.port, requested);
+    const second = await spawnServe(rootB, requested);
+    try {
+      assert.equal(second.port, requested + 1);
+    } finally {
+      second.child.kill();
+    }
+  } finally {
+    first.child.kill();
+  }
 });

@@ -96,6 +96,79 @@ test('extractSchema: Laravel migration with foreignId convention and explicit FK
   assert.equal(journalIdCol.fkColumn, 'id');
 });
 
+test('extractSchema: foreignId with explicit constrained() table argument overrides heuristic', () => {
+  const php = [
+    '<?php',
+    'return new class extends Migration {',
+    '  public function up()',
+    '  {',
+    "    Schema::create('manuscripts', function (Blueprint $table) {",
+    '      $table->id();',
+    "      $table->foreignId('submitting_user_id')->constrained('users');",
+    '    });',
+    '  }',
+    '};',
+  ].join('\n');
+  const s = extractSchema('database/migrations/2026_01_02_create_manuscripts.php', php);
+  const col = s.columns.find(c => c.name === 'submitting_user_id');
+  assert.equal(col.fkTable, 'users');
+  assert.equal(col.fkColumn, 'id');
+});
+
+test('extractSchema: foreignId with bare constrained() still uses heuristic', () => {
+  const php = [
+    '<?php',
+    'return new class extends Migration {',
+    '  public function up()',
+    '  {',
+    "    Schema::create('posts', function (Blueprint $table) {",
+    '      $table->id();',
+    "      $table->foreignId('author_id')->constrained();",
+    '    });',
+    '  }',
+    '};',
+  ].join('\n');
+  const s = extractSchema('database/migrations/2026_01_03_create_posts.php', php);
+  const col = s.columns.find(c => c.name === 'author_id');
+  assert.equal(col.fkTable, 'authors');
+  assert.equal(col.fkColumn, 'id');
+});
+
+test('extractSchema: foreignId with constrained(table, key) two-arg form', () => {
+  const php = [
+    '<?php',
+    'return new class extends Migration {',
+    '  public function up()',
+    '  {',
+    "    Schema::create('devices', function (Blueprint $table) {",
+    '      $table->id();',
+    "      $table->foreignId('owner_id')->constrained('accounts', 'uuid');",
+    '    });',
+    '  }',
+    '};',
+  ].join('\n');
+  const s = extractSchema('database/migrations/2026_01_04_create_devices.php', php);
+  const col = s.columns.find(c => c.name === 'owner_id');
+  assert.equal(col.fkTable, 'accounts');
+  assert.equal(col.fkColumn, 'uuid');
+});
+
+test('extractSchema: bare constrained() does not leak table name from next line', () => {
+  const php = [
+    '<?php',
+    "Schema::create('commits', function (Blueprint $table) {",
+    "  $table->foreignId('branch_id')->constrained()->cascadeOnDelete();",
+    "  $table->foreignId('author_user_id')->constrained('users')->cascadeOnDelete();",
+    '});',
+  ].join('\n');
+  const s = extractSchema('database/migrations/create_commits.php', php);
+  const branchCol = s.columns.find(c => c.name === 'branch_id');
+  const authorCol = s.columns.find(c => c.name === 'author_user_id');
+  assert.equal(branchCol.fkTable, 'branchs');
+  assert.notEqual(branchCol.fkTable, 'users');
+  assert.equal(authorCol.fkTable, 'users');
+});
+
 test('extractSchema: generic SQL CREATE TABLE with FOREIGN KEY', () => {
   const sql = [
     'CREATE TABLE orders (',

@@ -1,24 +1,78 @@
 # ctx
 
-Universal coding companion plugin for AI coding agents.
+The shared brain for developers who work across many AI coding agents.
 
 **Author:** [pulak-ranjan](https://github.com/pulak-ranjan) | **Owned by:** [ATUL AI](https://github.com/ATUL-Labs)
 
-One plugin replaces superpowers + ponytail + ui-ux-pro-max. Works on any coding agent: Claude Code, Codex, Windsurf, Cursor, Copilot, Gemini, Antigravity, OpenCode, pi, Kimi.
+> **Beta.** The core protocol, index, and viewer are built and
+> tested, but this is still young software - expect rough edges. Token-savings
+> benchmarks are in progress; see [Why it's cheap on tokens](#why-its-cheap-on-tokens)
+> for what's measured versus what's still being verified.
+
+## The problem this solves
+
+You're building a feature in Claude Code. You hit a usage limit mid-task. You open
+Trae, or Windsurf, or Antigravity, and now you're explaining the whole thing again -
+what you were doing, what you already tried, what broke last time. The new agent has
+no memory of the last one. Multiply that across three projects you're juggling at
+once and it's a constant tax: re-explaining, re-discovering, occasionally re-breaking
+something that was already fixed once.
+
+ctx exists because the chat window was never the right place to keep a project's
+memory. The chat is disposable. `.ctx/` is not.
+
+**The test ctx is built to pass:** start a task in Claude Code, close it mid-way,
+open Trae, type "continue" - and the agent picks up exactly where the last one left
+off. Same knowledge, same discipline, same taste, on a completely different tool,
+with zero re-explaining.
+
+## Why it's cheap on tokens
+
+The usual way an agent "understands" a codebase is expensive: grep for a term, read
+the whole file that matched, read three more files to find where something else is
+defined, read every migration to piece together what the database looks like. Each of
+those reads costs real tokens, and most of a 500-line file is irrelevant to the one
+function you needed.
+
+ctx replaces that pattern with a query:
+
+- **Never a full-file read to find something.** `ctx search <term>` returns the
+  matching lines with a snippet - not the file. `ctx symbols <file>` lists what's in
+  a file without opening it.
+- **Never re-derived from source.** The database schema, the API routes, the
+  cross-file links - all of it lives in a SQLite index (`.ctx/index.db`) built once
+  and kept fresh automatically. Ask a question, get an answer in one command, instead
+  of reading migrations or route files by hand every time.
+- **Never re-read what's already known.** `mistakes.md`, `patterns.md`, and `status.md`
+  are ~30-100 lines each, loaded only when the task needs them - not the whole
+  project's history, every session.
+- **Never lost, so never rebuilt.** This is what the continuity engine above is for:
+  a fixed bug stays fixed because the next agent reads that it was fixed, instead of
+  re-discovering the same problem and re-writing the same fix.
+
+We haven't published a benchmarked token-savings percentage yet - claiming one
+without measuring it would be exactly the kind of unverified number this project
+tries to avoid. Benchmarking is actively in progress (this is a beta release); an
+exact figure will replace this paragraph once it's measured properly,
+not guessed. What's true and checkable today: the mechanisms above exist, they're
+index-backed rather than read-backed, and you can watch them work live in the
+viewer (`ctx serve`) - one search, one line back, not a file.
 
 ## What it does
 
-- **Reasoning**: brainstorming, planning, TDD, debugging, verification, code review, subagent dispatch
-- **Efficient code**: YAGNI, stdlib first, shortest diff, no bloat (always active)
+- **Continuity engine**: three-layer state protection - step-cadence `wip.md` checkpoints, deliberate flush at ~80% context pressure, PreCompact/SessionStart hooks on Claude Code. Sessions survive compaction, crashes, and - the point of the whole system - handoffs to a completely different agent
+- **Project memory**: `.ctx/` folder with compressed conversations, knowledge pages, page-index tree. Any agent that can read a file gets the full picture, no vendor lock-in
+- **Agent audit trail**: who did what, when, which model, which platform - so when you switch tools mid-project, you can see exactly what the last one did
+- **Smart loading**: index-then-load - reads ~80 lines on start, pulls knowledge on demand. Never floods a fresh agent's context with everything at once
+- **ctx-index**: self-maintaining SQLite index (zero tokens to maintain) - `search`, `symbols`, API-to-frontend `links`, and a DB schema map (tables/columns/foreign keys from real migrations) via one CLI call; auto-updated by a PostToolUse hook on Claude Code, lazily refreshed everywhere else
+- **Docs cache**: global self-building cheatsheets (`~/.ctx/docs/`) - agents check distilled, version-verified API notes before guessing from training data; searchable via `ctx docs <term>`. Shared across every project on the machine, so the second project benefits from the first one's work
+- **Live viewer**: `ctx serve` opens a local mission-control page showing exactly what any agent working on the project can see - live status, task list, knowledge, index, schema, and a banner that lights up the moment an agent starts writing. Auto-picks a free port so several projects can each run their own view at once
+- **Reasoning skills**: brainstorming, planning, TDD, debugging, verification, code review, subagent dispatch - the same discipline enforced on every agent, every platform
 - **Design intelligence**: data-backed, not vibes - 8 style catalogs with real CSS recipes, 12 curated palettes, 10 font pairings, motion recipes; mandatory per-project design identity and an anti-generic gate that blocks template-looking UI
-- **Project memory**: `.ctx/` folder with compressed conversations, knowledge pages, page-index tree
-- **Smart loading**: index-then-load - reads ~80 lines on start, pulls knowledge on demand
-- **Continuity engine**: three-layer state protection - step-cadence `wip.md` checkpoints, deliberate flush at ~80% context pressure, PreCompact/SessionStart hooks on Claude Code. Sessions survive compaction, crashes, and agent handoffs
-- **ctx-index**: self-maintaining SQLite index (zero tokens to maintain) - `search`, `symbols`, and API-to-frontend `links` via one CLI call; auto-updated by a PostToolUse hook on Claude Code, lazily refreshed everywhere else
-- **Docs cache**: global self-building cheatsheets (`~/.ctx/docs/`) - agents check distilled, version-verified API notes before guessing from training data; searchable via `ctx docs <term>`
-- **Live viewer**: `ctx serve` opens a local mission-control page - live status, wip task list, knowledge pages, audit trail, index stats, search, and an API-to-frontend link map. Read-only, localhost-only, zero dependencies
-- **Agent audit**: who did what, when, which model, which platform
-- **Zero dependencies**: pure markdown files, no runtime, no build step
+- **Efficient code**: YAGNI, stdlib first, shortest diff, no bloat (always active)
+- **Zero dependencies**: pure markdown files plus one small Node script for the index/viewer - no build step, no server to maintain, nothing to update
+
+One plugin replaces the separate reasoning/style/memory tools you'd otherwise stitch together - and unlike those, it works identically on Claude Code, Codex, Windsurf, Cursor, Copilot, Gemini, Antigravity, OpenCode, pi, and Kimi.
 
 ---
 
@@ -118,8 +172,11 @@ node <ctx-repo>/bin/ctx.js symbols src/App.tsx       # symbol list without readi
 node <ctx-repo>/bin/ctx.js links dashboard/tasks     # route + every frontend consumer
 node <ctx-repo>/bin/ctx.js docs <term>              # search global distilled docs cache
 node <ctx-repo>/bin/ctx.js refresh                   # manual reindex (rarely needed)
-node <ctx-repo>/bin/ctx.js serve [port]              # live viewer at 127.0.0.1:4747
+node <ctx-repo>/bin/ctx.js serve [port]              # live viewer, defaults to 4747
 ```
+
+`serve` auto-picks the next free port (up to +8) if the requested one is busy - run it
+in several projects at once and each gets its own viewer, no manual port juggling.
 
 Large legacy folders: list path prefixes in `.ctx/ignore` (one per line) to exclude them from indexing.
 
@@ -127,14 +184,18 @@ Large legacy folders: list path prefixes in `.ctx/ignore` (one per line) to excl
 
 ## Viewer
 
-The live viewer opens a mission-control dashboard at `http://127.0.0.1:4747` to monitor your project in real time:
+The live viewer opens a mission-control dashboard to monitor your project in real time:
 
 ```bash
-node <ctx-repo>/bin/ctx.js serve        # defaults to port 4747
-node <ctx-repo>/bin/ctx.js serve 3000   # custom port
+node <ctx-repo>/bin/ctx.js serve        # http://127.0.0.1:4747 (or next free port)
+node <ctx-repo>/bin/ctx.js serve 3000   # start from a specific port instead
 ```
 
-Displays live status (project name, agent activity, version), current task list from `wip.md`, all knowledge pages with markdown rendering, full-text search, and index statistics. The API-to-frontend link graph is grouped by route/consumer pairing, filterable by URL substring, and color-coded by HTTP method. Activity timeline reverses audit log entries and groups by date. File preview drawer with symbol outline on demand. Live activity panel shows when an agent is writing to the project. Database schema panel displays tables, columns, and foreign key relationships extracted from migrations and SQL files. Read-only and localhost-bound - never modifies your project.
+**Working on several projects at once?** Run `serve` in each one - if 4747 is taken,
+the next tries 4748, then 4749, and so on up to 4755. Every project gets its own tab,
+you never have to remember or pick ports yourself.
+
+Displays live status (project name, agent activity, version), current task list from `wip.md`, all knowledge pages with markdown rendering, full-text search, and index statistics. The API-to-frontend link graph is grouped by route/consumer pairing, filterable by URL substring, and color-coded by HTTP method. Activity timeline reverses audit log entries and groups by date. File preview drawer with symbol outline on demand. Live activity panel shows when an agent is writing to the project - useful for watching a second agent work on the same project from a different session. Database schema panel displays tables, columns, and foreign key relationships extracted from migrations and SQL files. Read-only and localhost-bound - never modifies your project.
 
 ---
 
