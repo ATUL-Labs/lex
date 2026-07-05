@@ -45,7 +45,21 @@ else
   ok "no wip section when wip.md absent"
 fi
 
-rm -rf "$TMP" "$TMP2" "$TMP3"
+# Fixture 4: python3 unavailable - fallback path must still emit valid JSON
+SHIM="$(mktemp -d)"
+printf '#!/usr/bin/env bash\nexit 127\n' > "$SHIM/python3"
+chmod +x "$SHIM/python3"
+TMP4="$(mktemp -d)"
+mkdir -p "$TMP4/.ctx"
+printf 'line with "quotes" and \\ backslash\n' > "$TMP4/.ctx/status.md"
+OUT4="$(cd "$TMP4" && PATH="$SHIM:$PATH" CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash "$HOOK")"
+if printf '%s' "$OUT4" | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{JSON.parse(d)})' 2>/dev/null; then
+  ok "fallback output is valid JSON without python3"
+else
+  fail "fallback output is valid JSON without python3"
+fi
+
+rm -rf "$TMP" "$TMP2" "$TMP3" "$SHIM" "$TMP4"
 echo "---"
 echo "pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

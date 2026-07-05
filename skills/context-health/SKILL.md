@@ -63,3 +63,9 @@ INDEX.md must always reflect reality. After any change to `.ctx/`:
 - Add new pages
 - Remove deleted pages
 - Update line counts and summaries
+
+## Index Hygiene
+
+When initializing `.ctx/`, ensure the project `.gitignore` contains `.ctx/index.db`
+(plus its `-wal`/`-shm` siblings via `.ctx/index.db*`). The index is regenerable;
+never commit it, never treat it as a source of truth.

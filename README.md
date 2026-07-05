@@ -14,6 +14,7 @@ One plugin replaces superpowers + ponytail + ui-ux-pro-max. Works on any coding 
 - **Project memory**: `.ctx/` folder with compressed conversations, knowledge pages, page-index tree
 - **Smart loading**: index-then-load - reads ~80 lines on start, pulls knowledge on demand
 - **Continuity engine**: three-layer state protection - step-cadence `wip.md` checkpoints, deliberate flush at ~80% context pressure, PreCompact/SessionStart hooks on Claude Code. Sessions survive compaction, crashes, and agent handoffs
+- **ctx-index**: self-maintaining SQLite index (zero tokens to maintain) - `search`, `symbols`, and API-to-frontend `links` via one CLI call; auto-updated by a PostToolUse hook on Claude Code, lazily refreshed everywhere else
 - **Agent audit**: who did what, when, which model, which platform
 - **Zero dependencies**: pure markdown files, no runtime, no build step
 
@@ -75,6 +76,17 @@ The agent reads `CLAUDE.md` / `AGENTS.md` / `GEMINI.md` at session start - these
 #### Option C: Any agent (universal)
 
 If the agent can read files, ctx works. Point it at `skills/using-ctx/SKILL.md` - that single file teaches the agent the full protocol. No install mechanism required.
+
+## CLI
+
+Requires Node 22+. From anywhere inside a ctx project:
+
+```bash
+node <ctx-repo>/bin/ctx.js search userTask overdue   # full-text, 10 lines max
+node <ctx-repo>/bin/ctx.js symbols src/App.tsx       # symbol list without reading the file
+node <ctx-repo>/bin/ctx.js links /dashboard/tasks    # route + every frontend consumer
+node <ctx-repo>/bin/ctx.js refresh                   # manual reindex (rarely needed)
+```
 
 ### 2. Initialize a project
 

@@ -30,6 +30,8 @@ persistent memory shared across all AI coding agents.
 - UI work: read `.ctx/pages/design.md` first - the project's design identity
   overrides generic choices. Never template-looking output.
 - Never use em dashes anywhere. Hyphens only. No emojis unless asked.
+- Prefer `node <ctx-install>/bin/ctx.js search <terms>` over repo-wide grep when the
+  ctx CLI is available - one call, 10 lines back, always-fresh index.
 
 ## After completing work
 

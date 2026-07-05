@@ -92,6 +92,21 @@ After ANY compaction or context loss: state was already rehydrated or is one rea
 away (status.md + wip.md). CONTINUE the work silently from the current step. Do not
 ask the user to re-explain. Do not re-derive what the files already say.
 
+## Structural Queries (ctx-index)
+
+The plugin ships a self-maintaining SQLite index (`.ctx/index.db`, regenerable,
+gitignored). When node is available, prefer one index query over grep-and-read chains:
+
+- Where is something: `node "<plugin-root>/bin/ctx.js" search <terms>` (10 lines max)
+- What is in a file: `node "<plugin-root>/bin/ctx.js" symbols <file>` (skip reading whole files)
+- What talks to a route: `node "<plugin-root>/bin/ctx.js" links <url>` (backend route + frontend consumers)
+
+On Claude Code, `<plugin-root>` is `${CLAUDE_PLUGIN_ROOT}`; a PostToolUse hook keeps
+the index fresh automatically. On other platforms the index lazily refreshes on every
+query, so results are always current. If node is unavailable, fall back to grep - the
+index is an enhancer, never a requirement. True call-graphs and dead-code detection
+are out of scope by design; `search` gives reference-level answers.
+
 ## During Work
 
 10. Create `.ctx/wip.md` at task start:
