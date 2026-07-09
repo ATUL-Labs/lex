@@ -109,6 +109,20 @@ test('mcps endpoint suggests servers matching manifest deps', async () => {
   });
 });
 
+test('mcps endpoint hides suggestions already configured in .mcp.json', async () => {
+  const root = makeProject();
+  fs.writeFileSync(path.join(root, 'package.json'),
+    JSON.stringify({ dependencies: { react: '^19', 'snowflake-sdk': '^2' } }));
+  fs.writeFileSync(path.join(root, '.mcp.json'),
+    JSON.stringify({ mcpServers: { snowflake: { command: 'x' } } }));
+  await withServer(root, async (base) => {
+    const m = await (await fetch(base + '/api/mcps')).json();
+    const techs = m.rows.map(r => r.tech);
+    assert.ok(techs.includes('React'));
+    assert.ok(!techs.includes('Snowflake'));
+  });
+});
+
 test('session endpoint reads sessions dir with name guard', async () => {
   const root = makeProject();
   fs.mkdirSync(path.join(root, '.ctx', 'sessions'), { recursive: true });
