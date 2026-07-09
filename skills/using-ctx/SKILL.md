@@ -86,6 +86,11 @@ or guessing. The viewer's `/api/mcps` endpoint lists stack-matched suggestions f
 this project; recommend missing ones to the user only when a task would clearly
 benefit - not as a routine.
 
+The static map only knows common stacks. If it returns nothing (or misses the tech
+you are actually working with), infer suggestions yourself from stack.md and the
+manifests - you know the MCP ecosystem better than any hardcoded list. Same rule
+applies: suggest only what the current task needs.
+
 ### Continuity protocol (three layers)
 
 Layer 1 - ambient: update wip.md after EVERY significant step (file written, decision
