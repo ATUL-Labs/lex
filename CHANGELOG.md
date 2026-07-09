@@ -10,6 +10,14 @@ All notable changes to ctx. Format loosely follows [Keep a Changelog](https://ke
   `raw`/`rendered` toggle per pane. Clicking an outline symbol switches to raw view and
   jumps to the line. Non-markdown files are unaffected.
 
+### Performance
+- Raw code view caps initial render at 5,000 lines; larger files get a
+  "show remaining N lines" expander (outline jumps past the cap auto-expand).
+  An 18k-line file now builds 5k DOM nodes up front instead of 18k.
+- Schema canvas FK-line redraws during card drag are coalesced to one per
+  animation frame (pointermove can fire at 120Hz+), with a guaranteed final
+  redraw on release - keeps dragging smooth on schemas far larger than 44 tables.
+
 ## [0.1.11] - 2026-07-09
 
 ### Added

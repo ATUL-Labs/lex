@@ -525,6 +525,7 @@
   .ref-chip:hover { color: var(--ink); border-color: var(--accent); }
 
   .drawer-mdview { overflow: auto; padding: 12px 18px; }
+  .drawer-code li.drawer-more { list-style: none; padding: 10px 14px; }
   .pane-btn.active { color: var(--accent); border-color: var(--accent); }
 
   .pane-actions { display: flex; gap: 6px; flex: none; }
@@ -1364,6 +1365,7 @@ function enableCardDrag(card, name, tables) {
     try { card.setPointerCapture(e.pointerId); } catch {}
     var startX = e.clientX, startY = e.clientY;
     var orig = canvas.pos[name];
+    var lineRedrawQueued = false;
     function move(ev) {
       canvas.pos[name] = {
         x: orig.x + (ev.clientX - startX) / canvas.view.s,
@@ -1371,11 +1373,19 @@ function enableCardDrag(card, name, tables) {
       };
       card.style.left = canvas.pos[name].x + 'px';
       card.style.top = canvas.pos[name].y + 'px';
-      canvasDrawLines(tables);
+      // coalesce line redraws to one per frame; pointermove can fire at 120Hz+
+      if (!lineRedrawQueued) {
+        lineRedrawQueued = true;
+        requestAnimationFrame(function () {
+          lineRedrawQueued = false;
+          canvasDrawLines(tables);
+        });
+      }
     }
     function up() {
       card.removeEventListener('pointermove', move);
       card.removeEventListener('pointerup', up);
+      canvasDrawLines(tables);
       var saved = {};
       try { saved = JSON.parse(localStorage.getItem(POS_KEY) || '{}'); } catch {}
       saved[name] = canvas.pos[name];
@@ -1601,6 +1611,7 @@ var drawerEl = qs('drawer');
 var drawerBackdrop = qs('drawer-backdrop');
 var drawerPanesEl = qs('drawer-panes');
 var panes = []; // [{ path, terms, rawText, isMd, view, root, contentEl, outlineEl, mdBtn, bodyEl }]
+var LINE_CAP = 5000; // raw-view lines rendered up front; rest behind "show remaining"
 
 function currentSearchTerms() {
   var q = qs('search-input').value.trim();
@@ -1797,15 +1808,35 @@ function renderPaneView(pane) {
     next = document.createElement('ol');
     next.className = 'drawer-code';
     var firstHit = null;
-    pane.rawText.split('\n').forEach(function (line) {
-      var li = document.createElement('li');
-      li.textContent = line;
-      if (pane.terms.length && lineHasTerm(line, pane.terms)) {
-        li.classList.add('hit');
-        if (!firstHit) firstHit = li;
+    var lines = pane.rawText.split('\n');
+    function appendLines(from, to) {
+      for (var n = from; n < to; n++) {
+        var li = document.createElement('li');
+        li.textContent = lines[n];
+        if (pane.terms.length && lineHasTerm(lines[n], pane.terms)) {
+          li.classList.add('hit');
+          if (!firstHit) firstHit = li;
+        }
+        next.appendChild(li);
       }
-      next.appendChild(li);
-    });
+    }
+    appendLines(0, Math.min(lines.length, LINE_CAP));
+    if (lines.length > LINE_CAP) {
+      var more = document.createElement('li');
+      more.className = 'drawer-more';
+      var moreBtn = textEl('button', 'show remaining ' + (lines.length - LINE_CAP) + ' lines', 'pane-btn');
+      moreBtn.type = 'button';
+      more.appendChild(moreBtn);
+      next.appendChild(more);
+      pane.expandAll = function () {
+        more.remove();
+        appendLines(LINE_CAP, lines.length);
+        pane.expandAll = null;
+      };
+      moreBtn.addEventListener('click', function () { pane.expandAll(); });
+    } else {
+      pane.expandAll = null;
+    }
     if (firstHit) requestAnimationFrame(function () { firstHit.scrollIntoView({ block: 'center' }); });
   }
   pane.bodyEl.replaceChild(next, pane.contentEl);
@@ -1825,6 +1856,7 @@ function renderPaneOutline(pane, rows) {
     btn.appendChild(document.createTextNode(row.name));
     btn.addEventListener('click', function () {
       if (pane.view === 'md') { pane.view = 'code'; renderPaneView(pane); }
+      if (row.line > LINE_CAP && pane.expandAll) pane.expandAll();
       var li = pane.contentEl.children[row.line - 1];
       if (li) li.scrollIntoView({ block: 'center' });
     });
