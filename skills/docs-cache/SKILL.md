@@ -17,12 +17,12 @@ guess, not a source.
 
 ## Protocol
 
-1. Query: `node <plugin-root>/bin/ctx.js docs <term>` (one distinctive term;
+1. Query: `node <plugin-root>/bin/lex.js docs <term>` (one distinctive term;
    terms are ANDed with an OR fallback). Hit: use it, done.
 2. Miss: fetch the real documentation - a docs MCP if available, otherwise the
    official docs on the web. Read what you need for the task at hand.
 3. Distill while it is fresh: write or update a sheet at
-   `~/.ctx/docs/<stack>-<major.minor>/<topic>.md` using
+   `~/.lex/docs/<stack>-<major.minor>/<topic>.md` using
    `templates/docs-sheet.md`. Exact signatures, version gotchas, near-misses.
    Under 300 lines. Never paste raw docs pages.
 4. Re-run the query to confirm the sheet is indexed, then write the code.

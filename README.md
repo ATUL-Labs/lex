@@ -1,241 +1,290 @@
-# ctx
+<div align="center">
 
-The shared brain for developers who work across many AI coding agents.
+# lex
 
-**Author:** [pulak-ranjan](https://github.com/pulak-ranjan) | **Owned by:** [ATUL AI](https://github.com/ATUL-Labs)
+### The shared brain for AI coding agents.
 
-> **Beta.** See [CHANGELOG.md](CHANGELOG.md) for release history. The core protocol, index, and viewer are built and
-> tested, but this is still young software - expect rough edges. Token-savings
-> benchmarks are in progress; see [Why it's cheap on tokens](#why-its-cheap-on-tokens)
-> for what's measured versus what's still being verified.
+Cross-agent project memory, enforcement rules, and a live viewer.  
+Works on Claude Code, Cursor, Windsurf, Codex, Gemini, Copilot, Antigravity, Kimi, and any agent that can read files.
 
-## The problem this solves
+[![Tests](https://img.shields.io/badge/tests-50%20pass-brightgreen)](#)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D22-green)](#)
+[![Dependencies](https://img.shields.io/badge/dependencies-zero-success)](#)
+[![Platforms](https://img.shields.io/badge/platforms-9%2B-informational)](#platform-support)
+
+[Quick Start](#quick-start) &bull; [Demo](#demo) &bull; [CLI](#cli) &bull; [Viewer](#viewer) &bull; [Skills](#skills) &bull; [How It Works](#how-it-works)
+
+</div>
+
+---
+
+## The problem
 
 You're building a feature in Claude Code. You hit a usage limit mid-task. You open
-Trae, or Windsurf, or Antigravity, and now you're explaining the whole thing again -
-what you were doing, what you already tried, what broke last time. The new agent has
-no memory of the last one. Multiply that across three projects you're juggling at
-once and it's a constant tax: re-explaining, re-discovering, occasionally re-breaking
-something that was already fixed once.
+Cursor, or Windsurf, or Trae - and now you're explaining everything again. What you
+were doing. What you already tried. What broke last time. The new agent has no memory
+of the last one.
 
-ctx exists because the chat window was never the right place to keep a project's
-memory. The chat is disposable. `.ctx/` is not.
+Multiply that across three projects and it's a constant tax: re-explaining,
+re-discovering, occasionally re-breaking something that was already fixed.
 
-**The test ctx is built to pass:** start a task in Claude Code, close it mid-way,
-open Trae, type "continue" - and the agent picks up exactly where the last one left
-off. Same knowledge, same discipline, same taste, on a completely different tool,
-with zero re-explaining.
+**lex exists because the chat window was never the right place to keep a project's
+memory.** The chat is disposable. `.lex/` is not.
+
+### The test lex is built to pass
+
+> Start a task in Claude Code. Close it mid-way. Open Cursor. Type "continue".  
+> The agent picks up exactly where the last one left off - same knowledge, same
+> discipline, same taste, on a completely different tool, with zero re-explaining.
+
+---
+
+## Demo
+
+<table>
+  <tr>
+    <td align="center"><b>Dark mode</b></td>
+    <td align="center"><b>Light mode</b></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/viewer-dark.png" alt="lex viewer in dark mode" width="480"></td>
+    <td><img src="docs/images/viewer-light.png" alt="lex viewer in light mode" width="480"></td>
+  </tr>
+</table>
+
+<img src="docs/images/viewer-panels.png" alt="lex viewer with collapsible panels and schema canvas" width="960">
+
+```bash
+# Run the viewer
+node bin/lex.js serve
+
+# Catch secrets before they ship
+node bin/lex.js guard
+
+# Search without reading files
+node bin/lex.js search "userTask overdue"
+```
+
+---
 
 ## Why it's cheap on tokens
 
 The usual way an agent "understands" a codebase is expensive: grep for a term, read
 the whole file that matched, read three more files to find where something else is
-defined, read every migration to piece together what the database looks like. Each of
-those reads costs real tokens, and most of a 500-line file is irrelevant to the one
-function you needed.
+defined, read every migration to piece together the database. Each read costs tokens,
+and most of a 500-line file is irrelevant to the one function you needed.
 
-ctx replaces that pattern with a query:
+**lex replaces that pattern with a query:**
 
-- **Never a full-file read to find something.** `ctx search <term>` returns the
-  matching lines with a snippet - not the file. `ctx symbols <file>` lists what's in
-  a file without opening it.
-- **Never re-derived from source.** The database schema, the API routes, the
-  cross-file links - all of it lives in a SQLite index (`.ctx/index.db`) built once
-  and kept fresh automatically. Ask a question, get an answer in one command, instead
-  of reading migrations or route files by hand every time.
-- **Never re-read what's already known.** `mistakes.md`, `patterns.md`, and `status.md`
-  are ~30-100 lines each, loaded only when the task needs them - not the whole
-  project's history, every session.
-- **Never lost, so never rebuilt.** This is what the continuity engine above is for:
-  a fixed bug stays fixed because the next agent reads that it was fixed, instead of
-  re-discovering the same problem and re-writing the same fix.
+- **Never a full-file read to find something.** `lex search <term>` returns matching
+  lines with a snippet - not the file. `lex symbols <file>` lists what's in a file
+  without opening it.
+- **Never re-derived from source.** Database schema, API routes, cross-file links -
+  all live in a SQLite index built once and kept fresh automatically. One command
+  instead of reading migrations by hand.
+- **Never re-read what's already known.** Knowledge pages are ~30-100 lines each,
+  loaded only when the task needs them.
+- **Never lost, so never rebuilt.** A fixed bug stays fixed because the next agent
+  reads that it was fixed.
 
-We haven't published a benchmarked token-savings percentage yet - claiming one
-without measuring it would be exactly the kind of unverified number this project
-tries to avoid. Benchmarking is actively in progress (this is a beta release); an
-exact figure will replace this paragraph once it's measured properly,
-not guessed. What's true and checkable today: the mechanisms above exist, they're
-index-backed rather than read-backed, and you can watch them work live in the
-viewer (`ctx serve`) - one search, one line back, not a file.
+> Benchmarking is in progress. What's verifiable today: the mechanisms exist, they're
+> index-backed rather than read-backed, and you can watch them work live in the viewer.
+
+---
 
 ## What it does
 
-- **Continuity engine**: three-layer state protection - step-cadence `wip.md` checkpoints, deliberate flush at ~80% context pressure, PreCompact/SessionStart hooks on Claude Code. Sessions survive compaction, crashes, and - the point of the whole system - handoffs to a completely different agent
-- **Project memory**: `.ctx/` folder with compressed conversations, knowledge pages, page-index tree. Any agent that can read a file gets the full picture, no vendor lock-in
-- **Agent audit trail**: who did what, when, which model, which platform - so when you switch tools mid-project, you can see exactly what the last one did
-- **Smart loading**: index-then-load - reads ~80 lines on start, pulls knowledge on demand. Never floods a fresh agent's context with everything at once
-- **ctx-index**: self-maintaining SQLite index (zero tokens to maintain) - `search`, `symbols`, API-to-frontend `links`, and a DB schema map (tables/columns/foreign keys from real migrations) via one CLI call; auto-updated by a PostToolUse hook on Claude Code, lazily refreshed everywhere else
-- **Docs cache**: global self-building cheatsheets (`~/.ctx/docs/`) - agents check distilled, version-verified API notes before guessing from training data; searchable via `ctx docs <term>`. Shared across every project on the machine, so the second project benefits from the first one's work
-- **Live viewer**: `ctx serve` opens a local mission-control page showing exactly what any agent working on the project can see - live status, task list, knowledge, index, schema, and a banner that lights up the moment an agent starts writing. Auto-picks a free port so several projects can each run their own view at once
-- **Reasoning skills**: brainstorming, planning, TDD, debugging, verification, code review, subagent dispatch - the same discipline enforced on every agent, every platform
-- **Design intelligence**: data-backed, not vibes - 8 style catalogs with real CSS recipes, 12 curated palettes, 10 font pairings, motion recipes; mandatory per-project design identity and an anti-generic gate that blocks template-looking UI
-- **Efficient code**: YAGNI, stdlib first, shortest diff, no bloat (always active)
-- **Zero dependencies**: pure markdown files plus one small Node script for the index/viewer - no build step, no server to maintain, nothing to update
+| Feature | What it means |
+|---------|---------------|
+| **Continuity engine** | Three-layer state protection - `wip.md` checkpoints, ~80% context flush, hooks. Sessions survive compaction, crashes, and handoffs to a different agent |
+| **Project memory** | `.lex/` folder with knowledge pages, session summaries, audit trail. Any agent that can read a file gets the full picture |
+| **lex-index** | Self-maintaining SQLite index - `search`, `symbols`, API-to-frontend `links`, DB schema map. Zero tokens to maintain |
+| **lex guard** | Scans for exposed secrets (CRITICAL) and DB anti-patterns (IMPORTANT) before every commit. Exit code 1 if found |
+| **Live viewer** | `lex serve` opens a mission-control dashboard - live status, task list, knowledge, schema, search, agent activity. Dark/light theme, collapsible panels |
+| **Reasoning skills** | 16 skills: brainstorming, planning, TDD, debugging, verification, code review, and more. Same discipline on every agent, every platform |
+| **Stack overlays** | PHP? Agent uses Xdebug. Rust? Agent uses `dbg!` and audits `unsafe`. 5 overlay packs auto-detect at `lex init` |
+| **Security stance** | Always active - never inline secrets, never commit `.env`, scan for exposed keys before commit |
+| **DB architecture** | Wide tables over join farms, denormalize-first, no 1-to-1 tables, no EAV. Activates when designing schemas |
+| **Design intelligence** | 8 style catalogs, 12 palettes, 10 font pairings. Anti-generic gate blocks template-looking UI |
+| **Docs cache** | Global self-building cheatsheets (`~/.lex/docs/`). Agents check distilled, version-verified API notes before guessing |
+| **Zero dependencies** | Pure markdown + one small Node script. No build step, no server, nothing to update |
 
-One plugin replaces the separate reasoning/style/memory tools you'd otherwise stitch together - and unlike those, it works identically on Claude Code, Codex, Windsurf, Cursor, Copilot, Gemini, Antigravity, OpenCode, pi, and Kimi.
+One plugin replaces the separate reasoning, style, and memory tools you'd otherwise
+stitch together - and it works identically on **9+ platforms**.
 
 ---
 
 ## Quick Start
 
-### 1. Install the plugin
-
-#### Option A: Install globally (all projects)
+### 1. Install
 
 **Claude Code:**
 ```bash
-claude plugin install github:ATUL-Labs/ctx
+claude plugin install github:ATUL-Labs/lex
 ```
 
 **Codex:**
 ```bash
-codex plugin install github:ATUL-Labs/ctx
+codex plugin install github:ATUL-Labs/lex
 ```
 
 **Gemini CLI:**
 ```bash
-gemini extensions install github:ATUL-Labs/ctx
+gemini extensions install github:ATUL-Labs/lex
 ```
 
-**Cursor:**
-Add to your Cursor extensions - the `.cursor-plugin/plugin.json` is auto-detected.
+**Cursor / Windsurf:** Auto-detected from plugin manifests. No manual setup.
 
-**Windsurf:**
-The `AGENTS.md` file is auto-detected when the plugin is installed.
+**Any agent:** If it can read files, lex works. Point it at `skills/using-lex/SKILL.md`.
 
-**Trae:**
+<details>
+<summary>More install options (per-project, Trae, manual)</summary>
 
-Trae has no plugin system. Copy the ctx rules file into your project:
+#### Per-project (drop into codebase)
+```bash
+cp -r lex-plugin/skills/ .          # Skills folder - agents auto-discover
+cp lex-plugin/CLAUDE.md .           # Claude Code / Cursor / Windsurf
+cp lex-plugin/AGENTS.md .           # Codex / Copilot / Windsurf
+cp lex-plugin/GEMINI.md .           # Gemini CLI
+```
 
+#### Trae (no plugin system)
 ```bash
 mkdir -p .trae/rules
-cp <ctx-repo>/templates/platform/trae-rules.md .trae/rules/project_rules.md
+cp <lex-repo>/templates/platform/trae-rules.md .trae/rules/project_rules.md
+```
+</details>
+
+### 2. Initialize
+
+Tell your agent:
+```
+Initialize lex for this project
 ```
 
-#### Option B: Install per-project (drop into codebase)
-
-Extract the zip into your project root. The agent auto-detects the files:
-
+Or run directly:
 ```bash
-# Unzip into your project
-unzip ctx-plugin.zip -d .ctx-plugin
-
-# Or just copy what your agent needs:
-cp -r ctx-plugin/skills/ .          # Skills folder - agents auto-discover
-cp ctx-plugin/CLAUDE.md .           # Claude Code / Cursor / Windsurf
-cp ctx-plugin/AGENTS.md .           # Codex / Copilot / Windsurf
-cp ctx-plugin/GEMINI.md .           # Gemini CLI
+node <lex-repo>/bin/lex.js init
 ```
 
-The agent reads `CLAUDE.md` / `AGENTS.md` / `GEMINI.md` at session start - these bootstrap files tell it about the skills and the `.ctx/` protocol. No manual setup needed.
-
-#### Option C: Any agent (universal)
-
-If the agent can read files, ctx works. Point it at `skills/using-ctx/SKILL.md` - that single file teaches the agent the full protocol. No install mechanism required.
-
-### 2. Initialize a project
-
-In any project, tell your agent:
-```
-Initialize ctx for this project
-```
-
-Or invoke the skill directly:
-```
-/context-health
-```
-
-The agent will:
-1. Create `.ctx/` folder in your project root
-2. Scan your project (package.json, composer.json, folder structure)
-3. Generate `status.md`, `INDEX.md`, and knowledge pages
-4. You're ready to go
+This creates `.lex/` with `status.md`, `INDEX.md`, knowledge pages, and detects your
+stack (PHP, Rust, Python, TypeScript, Go) to load the right overlays.
 
 ### 3. Start working
 
-The plugin activates automatically every session. The agent will:
-- Read `.ctx/status.md` to know where things stand
-- Check for `wip.md` (crash recovery from interrupted sessions)
-- Load only the knowledge pages relevant to the current task
-- Track work in progress, log actions, and update knowledge after completing work
+The plugin activates automatically every session. The agent reads `.lex/status.md`,
+checks for `wip.md` (crash recovery), and loads only the knowledge pages relevant to
+the current task.
 
 ---
 
 ## CLI
 
-Requires Node 22+. From anywhere inside a ctx project:
+Requires Node 22+.
 
 ```bash
-node <ctx-repo>/bin/ctx.js init [dir]                # scaffold .ctx/ from templates
-node <ctx-repo>/bin/ctx.js search userTask overdue   # full-text, 10 lines max
-node <ctx-repo>/bin/ctx.js symbols src/App.tsx       # symbol list without reading the file
-node <ctx-repo>/bin/ctx.js links dashboard/tasks     # route + every frontend consumer
-node <ctx-repo>/bin/ctx.js docs <term>              # search global distilled docs cache
-node <ctx-repo>/bin/ctx.js refresh                   # manual reindex (rarely needed)
-node <ctx-repo>/bin/ctx.js serve [port]              # live viewer, defaults to 4747
+node <lex-repo>/bin/lex.js init [dir]                # scaffold .lex/ from templates
+node <lex-repo>/bin/lex.js guard                      # scan for exposed secrets + DB anti-patterns
+node <lex-repo>/bin/lex.js search userTask overdue   # full-text, 10 lines max
+node <lex-repo>/bin/lex.js symbols src/App.tsx       # symbol list without reading the file
+node <lex-repo>/bin/lex.js links dashboard/tasks     # route + every frontend consumer
+node <lex-repo>/bin/lex.js docs <term>              # search global distilled docs cache
+node <lex-repo>/bin/lex.js refresh                   # manual reindex (rarely needed)
+node <lex-repo>/bin/lex.js serve [port]              # live viewer, defaults to 4747
 ```
 
-`serve` auto-picks the next free port (up to +8) if the requested one is busy - run it
-in several projects at once and each gets its own viewer, no manual port juggling.
+**`guard`** scans all source files for hardcoded API keys, passwords, tokens,
+connection strings (CRITICAL - exits with code 1 if found), and database
+anti-patterns like 1-to-1 tables, EAV, and settings tables (IMPORTANT).
+**Run it before every commit.**
 
-Large legacy folders: list path prefixes in `.ctx/ignore` (one per line) to exclude them from indexing.
+**`serve`** auto-picks the next free port (up to +8) if the requested one is busy -
+run it in several projects at once and each gets its own viewer.
+
+Large legacy folders: list path prefixes in `.lex/ignore` (one per line) to exclude
+them from indexing.
 
 ---
 
 ## Viewer
 
-The live viewer opens a mission-control dashboard to monitor your project in real time:
-
 ```bash
-node <ctx-repo>/bin/ctx.js serve        # http://127.0.0.1:4747 (or next free port)
-node <ctx-repo>/bin/ctx.js serve 3000   # start from a specific port instead
+node <lex-repo>/bin/lex.js serve        # http://127.0.0.1:4747 (or next free port)
+node <lex-repo>/bin/lex.js serve 3000   # specific port
 ```
 
-**Working on several projects at once?** Run `serve` in each one - if 4747 is taken,
-the next tries 4748, then 4749, and so on up to 4755. Every project gets its own tab,
-you never have to remember or pick ports yourself.
+A live mission-control dashboard for your project:
 
-Displays live status (project name, agent activity, version), current task list from `wip.md`, all knowledge pages with markdown rendering, full-text search, and index statistics. The API-to-frontend link graph is grouped by route/consumer pairing, filterable by URL substring, and color-coded by HTTP method. Activity timeline reverses audit log entries and groups by date. File preview drawer with symbol outline on demand. Live activity panel shows when an agent is writing to the project - useful for watching a second agent work on the same project from a different session. Database schema panel displays tables, columns, and foreign key relationships extracted from migrations and SQL files. Read-only and localhost-bound - never modifies your project.
+- **Now panel** - live status, agent activity banner, current task list from `wip.md`
+- **Codebase panel** - file/symbol/link stats, full-text search, MCP suggestions
+- **Graph panel** - API-to-frontend link graph, filterable by URL, color-coded by HTTP method
+- **Schema panel** - tables, columns, FK relationships from real migrations. Fullscreen pannable/zoomable ERD canvas
+- **Memory panel** - knowledge pages with markdown rendering, session summaries, activity timeline
+
+**Dark/light theme** - moon/sun toggle in the header. Persists in `localStorage`.
+
+**Collapsible panels** - each panel has a collapse button. The **View** dropdown in
+the header hides/shows any panel. Layout reflows automatically. State persists in
+`localStorage`.
+
+Read-only and localhost-bound - never modifies your project.
 
 ---
 
-## Optional: code graph upgrade
+## Skills
 
-ctx-index answers "where is X used" with text search. For true call-graphs,
-dead-code detection, and trace-paths on large codebases, add the MIT-licensed
-[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) (single
-static binary, zero dependencies, fully local):
+16 skills, each a standalone `SKILL.md` that any agent can read:
 
-```bash
-# macOS / Linux (auto-detects and configures Claude Code and other agents)
-curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash
-```
+| Skill | Trigger | Purpose |
+|-------|---------|---------|
+| **using-lex** | Auto (session start) | Bootstrap - protocol, skill index, rules |
+| **brainstorming** | "let's build", "add feature" | Explore ideas before building |
+| **planning** | After brainstorming | Break specs into executable tasks |
+| **executing** | After planning | Work through plans with checkpoints |
+| **tdd** | Before implementation | Red-green-refactor |
+| **debugging** | Bug, test failure | Systematic root-cause analysis |
+| **verification** | Before claiming "done" | Prove work is complete with evidence |
+| **code-review** | After writing code | Quality, security, correctness review |
+| **efficient-code** | Always active | YAGNI, shortest diff, no bloat |
+| **design-intelligence** | Any UI/frontend work | Intentional design, never template-looking |
+| **docs-cache** | Session start | Global distilled API docs, version-verified |
+| **subagent-dispatch** | 2+ independent tasks | Parallel agent execution |
+| **finishing-branch** | Before merge/PR | PR creation, merge, cleanup |
+| **context-health** | Init, maintenance | Manage `.lex/`, compress, prevent overflow |
+| **security** | Any code, any file | Always active - never expose secrets |
+| **database-architecture** | Designing schema | Wide tables, denormalize-first, no EAV |
 
-```powershell
-# Windows
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.ps1 -OutFile install.ps1; .\install.ps1
-```
+### Stack overlays
 
-ctx works fully without it - the skills tell agents to prefer the graph when
-it is connected and fall back to `ctx search`, then grep, when it is not.
+`lex init` auto-detects your stack and loads matching overlays alongside each skill:
+
+| Overlay | Languages | What it adds |
+|---------|-----------|--------------|
+| **php** | PHP, Laravel, Symfony | Xdebug/Telescope, Pest/PHPUnit, mass assignment checks, N+1 detection |
+| **rust** | Rust | `dbg!`/clippy/miri, `#[test]` patterns, `unsafe` audits, borrow check review |
+| **python** | Python, Django, FastAPI | pdb/breakpoint, pytest fixtures, mutable default arg checks |
+| **typescript** | TS, React, Next.js, Vue | devtools, Vitest/Jest, `any`/`as` review, async correctness |
+| **go** | Go | delve, table-driven tests, goroutine leak checks, `err` handling review |
+
+~30-50 lines each, loaded on-demand only when the skill fires.
 
 ---
 
 ## How It Works
 
-### The `.ctx/` folder (per-project)
+### The `.lex/` folder
 
 Created in each project root. Any agent that can read markdown can use it.
 
 ```
-.ctx/
+.lex/
   status.md       Current state (~30 lines). Rewritten each session.
-  INDEX.md        Table of contents - what knowledge exists, 1-line per page.
-  wip.md          Work-in-progress. Exists ONLY during active work (crash recovery).
-  audit.log       One-line entries: timestamp | agent | platform | action | target
-
+  INDEX.md        Table of contents - what knowledge exists.
+  wip.md          Work-in-progress. Exists ONLY during active work.
+  audit.log       timestamp | agent | platform | action | target
   sessions/       Compressed conversation summaries (one per day)
-  pages/          Knowledge pages:
+  pages/
     stack.md        Tech stack, folder structure, naming conventions
     run.md          How to install, boot, test, and access the app
     mistakes.md     What broke, why, never repeat
@@ -248,27 +297,23 @@ Created in each project root. Any agent that can read markdown can use it.
 
 | File | When loaded | Lines |
 |------|-------------|-------|
-| status.md | Every session | ~30 |
-| INDEX.md | Every session | ~30 |
+| `status.md` | Every session | ~30 |
+| `INDEX.md` | Every session | ~30 |
 | Relevant pages | Only when task needs them | ~100 max |
-| wip.md | Only during active work | ~40 |
+| `wip.md` | Only during active work | ~40 |
 | **Total** | | **~200 max** |
-
-The agent never bulk-loads all knowledge. It reads the index, decides what's relevant, and pulls only those pages.
 
 ### Crash recovery
 
-When an agent starts a task, it creates `wip.md` with the plan and progress. If the session disconnects mid-work, the next agent (even a different one on a different platform) finds `wip.md` and knows:
-- What was being worked on
-- Which steps are done
-- Which files were modified
-- Where to resume
+When an agent starts a task, it creates `wip.md` with the plan and progress. If the
+session disconnects, the next agent finds `wip.md` and knows exactly what was being
+worked on, which steps are done, which files were modified, and where to resume.
 
-When work completes normally, `wip.md` is deleted. If it exists at session start, something was interrupted.
+When work completes normally, `wip.md` is deleted. If it exists at session start,
+something was interrupted.
 
 ### Agent audit trail
 
-Every action is logged to `audit.log`:
 ```
 2026-06-29 14:30 | claude-sonnet-4-6 | claude-code | rewrite | components/Dashboard.tsx
 2026-06-29 15:00 | gpt-4o | windsurf | create | tests/DashboardTest.php
@@ -278,59 +323,51 @@ Any agent can see who did what, when, and on which platform.
 
 ---
 
-## Skills
+## Platform Support
 
-All skills are in `skills/`. Each is a standalone SKILL.md that any agent can read.
-
-| Skill | Trigger | Purpose |
-|-------|---------|---------|
-| **using-ctx** | Auto (session start) | Bootstrap - protocol, skill index, rules |
-| **brainstorming** | "let's build", "add feature", "idea" | Explore ideas before building |
-| **planning** | After brainstorming, or "plan this" | Break specs into executable tasks |
-| **executing** | After planning | Work through plans with checkpoints |
-| **tdd** | Before writing implementation | Test-driven development (red-green-refactor) |
-| **debugging** | Bug, test failure, unexpected behavior | Systematic root-cause analysis |
-| **verification** | Before claiming "done" | Prove work is complete with evidence |
-| **code-review** | After writing code | Quality, security, correctness review |
-| **efficient-code** | Always active | YAGNI, shortest diff, no bloat |
-| **design-intelligence** | Any UI/frontend work | Intentional design, never template-looking |
-| **docs-cache** | Agents at session start | Global distilled API docs, version-verified |
-| **subagent-dispatch** | 2+ independent tasks | Parallel agent execution |
-| **finishing-branch** | Before merge/PR | PR creation, merge, cleanup workflow |
-| **context-health** | Init, maintenance, overflow | Manage .ctx/, compress, prevent overflow |
-
-### Skill priority
-
-1. **Process skills first**: brainstorming, debugging (determine HOW to approach)
-2. **Implementation skills second**: tdd, design-intelligence (guide execution)
-3. **Quality skills last**: verification, code-review (confirm correctness)
-
-`efficient-code` is always active - it's a stance, not an invocation.
+| Platform | How it activates | Install |
+|----------|-----------------|---------|
+| **Claude Code** | Shell hook at session start | `claude plugin install github:ATUL-Labs/lex` |
+| **Codex** | Shell hook at session start | `codex plugin install github:ATUL-Labs/lex` |
+| **Cursor** | Auto-detected from manifest | Drop in project root |
+| **Windsurf** | `AGENTS.md` at session start | Auto-detected from `.windsurf/plugin.json` |
+| **Copilot CLI** | Shares Claude Code mechanism | Same as Claude Code |
+| **Gemini CLI** | `GEMINI.md` as context file | `gemini extensions install github:ATUL-Labs/lex` |
+| **Kimi Code** | Manifest at session start | `/plugins install github:ATUL-Labs/lex` |
+| **Antigravity** | `ANTIGRAVITY.md` context file | `agy plugin install github:ATUL-Labs/lex` |
+| **Any agent** | Reads `skills/using-lex/SKILL.md` | Drop `skills/` in project root |
 
 ---
 
-## Platform Support
+## Optional: code graph upgrade
 
-ctx works on any agent through 3 delivery mechanisms:
+lex-index answers "where is X used" with text search. For true call-graphs,
+dead-code detection, and trace-paths on large codebases, add the MIT-licensed
+[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) (single
+static binary, zero dependencies, fully local):
 
-| Platform | How it activates | Install command |
-|----------|-----------------|-----------------|
-| Claude Code | Shell hook auto-injects at session start | `claude plugin install github:ATUL-Labs/ctx` |
-| Codex | Shell hook auto-injects at session start | `codex plugin install github:ATUL-Labs/ctx` |
-| Cursor | Shell hook auto-injects at session start | Auto-detected from `.cursor-plugin/plugin.json` |
-| Copilot CLI | Shell hook (shares Claude Code mechanism) | Same as Claude Code |
-| Gemini CLI | `GEMINI.md` loaded as context file | `gemini extensions install github:ATUL-Labs/ctx` |
-| Kimi Code | Manifest triggers `using-ctx` skill at session start | `/plugins install github:ATUL-Labs/ctx` |
-| Windsurf | Shell hook / `AGENTS.md` at session start | Auto-detected from `.windsurf/plugin.json` |
-| Antigravity | `ANTIGRAVITY.md` context file loaded at session start | `agy plugin install github:ATUL-Labs/ctx` |
-| **Any agent** | Agent reads `skills/using-ctx/SKILL.md` | Drop `skills/` in project root, or point agent at the file |
+```bash
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash
+```
+
+```powershell
+# Windows
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.ps1 -OutFile install.ps1; .\install.ps1
+```
+
+lex works fully without it - skills prefer the graph when connected, fall back to
+`lex search`, then grep.
 
 ---
 
 ## File Structure
 
+<details>
+<summary>Click to expand</summary>
+
 ```
-ctx/
+lex/
   .claude-plugin/plugin.json       # Claude Code manifest
   .codex-plugin/plugin.json        # Codex manifest
   .cursor-plugin/plugin.json       # Cursor manifest
@@ -344,7 +381,7 @@ ctx/
   gemini-extension.json            # Gemini extension manifest
   LICENSE                          # Apache 2.0
   README.md                        # This file
-  
+
   hooks/
     hooks.json                     # Claude Code hook config
     hooks-codex.json               # Codex hook config
@@ -352,44 +389,44 @@ ctx/
     run-hook.cmd                   # Polyglot dispatcher (Windows + Unix)
     session-start                  # Bootstrap script
     session-start-codex            # Codex-specific bootstrap
-  
+
   skills/
-    using-ctx/SKILL.md             # Bootstrap (loaded every session)
-    using-ctx/references/          # Per-platform tool mappings
+    using-lex/SKILL.md             # Bootstrap (loaded every session)
+    using-lex/references/          # Per-platform tool mappings
     brainstorming/SKILL.md
     planning/SKILL.md
     executing/SKILL.md
     tdd/SKILL.md
+    tdd/overlays/                  php.md rust.md python.md typescript.md go.md
     debugging/SKILL.md
+    debugging/overlays/            php.md rust.md python.md typescript.md go.md
     verification/SKILL.md
     code-review/SKILL.md
+    code-review/overlays/          php.md rust.md python.md typescript.md go.md
     efficient-code/SKILL.md
+    efficient-code/overlays/       php.md rust.md python.md typescript.md go.md
+    security/SKILL.md              # Always-active: never inline secrets
+    database-architecture/SKILL.md # Wide tables, denormalize-first
     design-intelligence/SKILL.md
     docs-cache/SKILL.md
     subagent-dispatch/SKILL.md
     finishing-branch/SKILL.md
     context-health/SKILL.md
-  
-  templates/                       # .ctx/ templates (copied to projects on init)
-    STATUS.md
-    INDEX.md
-    wip.md
+
+  templates/                       # .lex/ templates (copied on init)
+    STATUS.md  INDEX.md  wip.md
     pages/
-      stack.md
-      run.md
-      mistakes.md
-      patterns.md
-      design.md
-      rules.md
+      stack.md  run.md  mistakes.md  patterns.md  design.md  rules.md
 ```
+</details>
 
 ---
 
 ## Acknowledgments
 
-- Cross-platform plugin delivery pattern (hooks, manifests, session-start bootstrap) inspired by [superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT)
-- Efficient code ladder inspired by [ponytail](https://github.com/DietrichGebert/ponytail) - the lazy senior dev approach to writing less code
-- Token optimization concepts informed by [sipcode](https://github.com/Anuj7411/sipcode) - context window efficiency for AI coding agents
+- Cross-platform plugin delivery pattern inspired by [superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT)
+- Efficient code ladder inspired by [ponytail](https://github.com/DietrichGebert/ponytail)
+- Token optimization concepts informed by [sipcode](https://github.com/Anuj7411/sipcode)
 
 All skill content is original.
 
@@ -397,8 +434,20 @@ All skill content is original.
 
 **pulak-ranjan** - [LinkedIn](https://www.linkedin.com/in/pulak-ranjan/) | [GitHub](https://github.com/pulak-ranjan)
 
-Owned by [ATUL AI](https://github.com/ATUL-Labs). Free to use for all developers.
+Built by [ATUL AI](https://github.com/ATUL-Labs). Free for all developers.
 
 ## License
 
 Apache 2.0 - see [LICENSE](LICENSE) for details.
+
+---
+
+<div align="center">
+
+### If lex saved you from re-explaining your project to yet another AI agent...
+
+**[Star this repo](https://github.com/ATUL-Labs/lex)** - it helps other developers discover it.
+
+[Report a bug](https://github.com/ATUL-Labs/lex/issues) &bull; [Request a feature](https://github.com/ATUL-Labs/lex/issues) &bull; [CHANGELOG](CHANGELOG.md)
+
+</div>

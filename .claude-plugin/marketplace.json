@@ -1,14 +1,14 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "ctx-local",
-  "description": "Local marketplace for the ctx plugin - enables install from a local checkout.",
+  "name": "lex-local",
+  "description": "Local marketplace for the lex plugin - enables install from a local checkout.",
   "owner": {
     "name": "pulak-ranjan",
     "url": "https://github.com/pulak-ranjan"
   },
   "plugins": [
     {
-      "name": "ctx",
+      "name": "lex",
       "description": "The shared brain for developers who work across many AI coding agents - continuity, project memory, structural index, design intelligence, crash recovery.",
       "author": {
         "name": "pulak-ranjan"

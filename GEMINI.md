@@ -1,2 +1,2 @@
-@./skills/using-ctx/SKILL.md
-@./skills/using-ctx/references/gemini-tools.md
+@./skills/using-lex/SKILL.md
+@./skills/using-lex/references/gemini-tools.md

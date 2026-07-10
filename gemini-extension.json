@@ -1,6 +1,6 @@
 {
-  "name": "ctx",
+  "name": "lex",
   "description": "Universal coding companion - reasoning, efficient code, design intelligence, project memory, crash recovery.",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "contextFileName": "GEMINI.md"
 }

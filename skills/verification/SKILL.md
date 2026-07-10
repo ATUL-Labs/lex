@@ -28,7 +28,7 @@ response by the command output that proves it. No output shown, no claim made.
 3. **Check the diff** - review what actually changed. Does it match what was intended?
 4. **Manual check** - if it's UI, look at it in a browser. If it's an API, call it. If it's a CLI, run it
 5. **Security scan** - no hardcoded secrets, no SQL injection, no XSS, no exposed sensitive data
-6. **Context update** - update `.ctx/status.md`, write session summary, clean up `wip.md`
+6. **Context update** - update `.lex/status.md`, write session summary, clean up `wip.md`
 
 ## Rules
 

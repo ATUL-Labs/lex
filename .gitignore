@@ -8,3 +8,11 @@ docs/specs/
 wip.md
 index.html
 .ctx/
+.ctx/index.db*
+.ctx/live.json
+.env
+.env.*
+!.env.example
+!.env.template
+.lex/index.db*
+.lex/live.json

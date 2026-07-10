@@ -25,7 +25,7 @@ where unexamined assumptions waste the most work.
 
 ## Process
 
-1. **Understand context** - check `.ctx/status.md`, recent sessions, project patterns
+1. **Understand context** - check `.lex/status.md`, recent sessions, project patterns
 2. **Ask one question at a time** - prefer multiple choice. Understand purpose, constraints, success criteria
 3. **Propose 2-3 approaches** - with trade-offs and your recommendation. Lead with the recommended option
 4. **Present design section by section** - get approval after each section. Scale detail to complexity
@@ -40,7 +40,7 @@ where unexamined assumptions waste the most work.
 - YAGNI ruthlessly - remove unnecessary features from all designs
 - Design for isolation: each unit has one clear purpose, communicates through defined interfaces
 - In existing codebases: follow existing patterns, don't propose unrelated refactoring
-- Check `.ctx/pages/design.md` and `.ctx/pages/patterns.md` for project-specific conventions
+- Check `.lex/pages/design.md` and `.lex/pages/patterns.md` for project-specific conventions
 
 ## Design Sections
 

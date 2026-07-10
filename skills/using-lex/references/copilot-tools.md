@@ -14,4 +14,4 @@
 ## Notes
 - Copilot CLI shares the Claude Code tool names
 - If no native skill tool exists, read SKILL.md files directly - this is the sanctioned mechanism
-- `.ctx/` files are plain markdown readable with `Read`
+- `.lex/` files are plain markdown readable with `Read`

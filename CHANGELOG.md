@@ -1,6 +1,52 @@
 # Changelog
 
-All notable changes to ctx. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
+All notable changes to lex. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
+
+## [0.1.13] - 2026-07-10
+
+### Changed
+- **Renamed ctx to lex** - the codebase is law. Full rename: `ctx` -> `lex`,
+  `.ctx/` -> `.lex/`, `CTX_DOCS_DIR` -> `LEX_DOCS_DIR`, `bin/ctx.js` ->
+  `bin/lex.js`, `skills/using-ctx/` -> `skills/using-lex/`. All CLI commands
+  now use `lex` (e.g. `lex init`, `lex guard`, `lex serve`).
+
+### Added
+- **lex guard command** - enforcement mechanism that scans the codebase for
+  violations of lex rules. Detects exposed secrets (OpenAI keys, AWS keys,
+  GitHub tokens, Slack tokens, Google API keys, JWTs, connection strings with
+  embedded credentials, hardcoded passwords/API keys/secrets) as CRITICAL
+  findings (exit code 1), and database anti-patterns (1-to-1 profile tables,
+  settings tables, EAV pattern) as IMPORTANT findings. Run before every commit.
+- **Security skill** - always-active stance (like efficient-code) that prevents
+  secrets from entering code, commits, logs, or output. Hard gate: no API key,
+  password, token, or connection string may be written inline. `lex init` now
+  auto-adds `.env`, `.env.*`, and `!.env.example` to `.gitignore`. Code review
+  skill updated with mandatory secret scanning (pattern-based) as a CRITICAL
+  check before any merge.
+- **Database architecture skill** - wide-table, denormalize-first philosophy.
+  Prevents the common AI pattern of creating many small tables connected by
+  foreign keys. Rules: no 1-to-1 tables, no tables for bounded 1-to-few
+  relationships, no EAV (use JSON columns), denormalize fields read together.
+  Activates when creating migrations or designing schemas. Code review skill
+  updated with database design checks.
+- **Stack overlays** - five overlay packs (PHP, Rust, Python, TypeScript, Go)
+  for debugging, TDD, code-review, and efficient-code skills. Each overlay adds
+  stack-specific tools, bug catalogs, test patterns, and review checks (~30-50
+  lines) loaded on-demand alongside the core SKILL.md. `lex init` auto-detects
+  the project's language and framework from manifest files (composer.json,
+  Cargo.toml, pyproject.toml, requirements.txt, go.mod, package.json) and
+  writes the overlay key into `stack.md`. The using-lex protocol tells agents
+  to load the matching overlay when invoking any skill that has one.
+- **Viewer dark/light theme** - moon/sun toggle in the header switches between
+  the existing dark palette and a new light palette with proper contrast. Theme
+  choice persists in `localStorage`. All hardcoded accent colors replaced with
+  CSS variables (`--accent-rgb`, `--accent-2-rgb`) so both themes propagate
+  across every component including SVG schema lines.
+- **Viewer collapsible panels** - each panel (Now, Codebase, Graph, Schema,
+  Memory) has a collapse button to shrink to its title bar. A **View** dropdown
+  in the header shows/hides any panel entirely. Layout uses
+  `grid-auto-flow: row dense` so visible panels reflow to fill gaps. Panel
+  state persists in `localStorage`.
 
 ## [0.1.12] - 2026-07-09
 
@@ -13,7 +59,7 @@ All notable changes to ctx. Format loosely follows [Keep a Changelog](https://ke
   (package.json, composer.json, requirements.txt, pyproject.toml, go.mod, Dockerfile,
   CI workflows) two levels deep and maps detected tech to specific MCP servers
   (Laravel → laravel-boost, Postgres → Postgres MCP, Snowflake → Snowflake MCP, ...).
-  Shown as chips in the viewer's Codebase panel; the using-ctx skill now tells agents
+  Shown as chips in the viewer's Codebase panel; the using-lex skill now tells agents
   to prefer the stack-matching MCP over generic shell probing ("tool focus"), and to
   infer suggestions themselves when the static map misses.
 - MCP suggestions already configured in the project `.mcp.json` or `~/.claude.json`
@@ -47,24 +93,24 @@ All notable changes to ctx. Format loosely follows [Keep a Changelog](https://ke
     match; may include false positives, and says so).
   - Any file can be opened **to the side**: the drawer widens and splits into two
     independent panes, each with its own outline, code view, and close button.
-- **`run.md` standard knowledge page** - sixth default page scaffolded by `ctx init`
+- **`run.md` standard knowledge page** - sixth default page scaffolded by `lex init`
   (alongside stack/mistakes/patterns/design/rules): how to install, boot, test, and access
-  the app. Wired into init, INDEX template, context-health, and the using-ctx loading rules
+  the app. Wired into init, INDEX template, context-health, and the using-lex loading rules
   (setup/boot/test/deploy questions load `run.md`).
 - **Local marketplace install** - `.claude-plugin/marketplace.json` so the plugin can be
   installed from a local checkout: `claude plugin marketplace add <path>` then
-  `claude plugin install ctx@ctx-local`.
+  `claude plugin install lex@lex-local`.
 - `/api/ls?dir=` viewer endpoint - immediate subdirectories and files of a directory,
   derived from the existing files index.
 
 ### Fixed
-- `ctx hook-update` no longer swallows errors silently: index-update and live.json failures
+- `lex hook-update` no longer swallows errors silently: index-update and live.json failures
   are written to stderr (visible in hook logs) while stdout remains valid hook JSON.
 
 ## [0.1.10] - 2026-07-05
 
 ### Added
-- Multi-project port fallback for `ctx serve` - if the requested port is busy, tries the
+- Multi-project port fallback for `lex serve` - if the requested port is busy, tries the
   next one (up to +8), so several projects can each run their own viewer simultaneously.
 
 ### Changed
@@ -75,9 +121,9 @@ All notable changes to ctx. Format loosely follows [Keep a Changelog](https://ke
 ## [0.1.9] - 2026-07-05
 
 ### Added
-- **`ctx init`** - scaffolds a complete `.ctx/` folder from templates (status, INDEX,
+- **`lex init`** - scaffolds a complete `.lex/` folder from templates (status, INDEX,
   knowledge pages, sessions dir, gitignore entries) in one command.
-- **Live activity indicator** - PostToolUse hook writes `.ctx/live.json`; the viewer shows
+- **Live activity indicator** - PostToolUse hook writes `.lex/live.json`; the viewer shows
   a banner the moment an agent starts writing to the project.
 - **DB schema ERD panel** - real tables, columns, and foreign keys extracted from Laravel
   migrations and SQL files into the index, rendered as linked cards in the viewer.
@@ -92,14 +138,14 @@ All notable changes to ctx. Format loosely follows [Keep a Changelog](https://ke
 ## [0.1.7] - 2026-07-05
 
 ### Added
-- **Live viewer** (`ctx serve`) - local mission-control dashboard: live status, wip task
+- **Live viewer** (`lex serve`) - local mission-control dashboard: live status, wip task
   list, knowledge pages, full-text search, index statistics. Read-only, localhost-bound.
 
 ## [0.1.6] - 2026-07-05
 
 ### Added
 - Codegraph tier-B: optional integration with codebase-memory-mcp for true call-graphs;
-  skills prefer the graph when connected, fall back to `ctx search` then grep.
+  skills prefer the graph when connected, fall back to `lex search` then grep.
 - Trae platform mapping (rules file template + tool reference).
 - `docs/verify.md` - 10-check install verification checklist per platform.
 
@@ -113,14 +159,14 @@ All notable changes to ctx. Format loosely follows [Keep a Changelog](https://ke
 ## [0.1.4] - 2026-07-05
 
 ### Added
-- Distilled docs cache (`~/.ctx/docs/`): global, self-building, version-verified API
-  cheatsheets shared across all projects on the machine; searchable via `ctx docs <term>`.
+- Distilled docs cache (`~/.lex/docs/`): global, self-building, version-verified API
+  cheatsheets shared across all projects on the machine; searchable via `lex docs <term>`.
 
 ## [0.1.3] - 2026-07-05
 
 ### Added
-- **ctx-index** - self-maintaining SQLite structural memory: `ctx search` (full-text with
-  snippets), `ctx symbols` (file outline without reading the file), `ctx links` (API
+- **lex-index** - self-maintaining SQLite structural memory: `lex search` (full-text with
+  snippets), `lex symbols` (file outline without reading the file), `lex links` (API
   route-to-frontend consumer graph). Auto-updated by a PostToolUse hook on Claude Code,
   lazily refreshed everywhere else.
 
@@ -138,9 +184,9 @@ All notable changes to ctx. Format loosely follows [Keep a Changelog](https://ke
 
 ### Added
 - Initial release: universal coding companion for cross-agent work.
-- `.ctx/` project memory protocol: `status.md`, `INDEX.md`, `wip.md`, `audit.log`,
+- `.lex/` project memory protocol: `status.md`, `INDEX.md`, `wip.md`, `audit.log`,
   knowledge pages (stack/mistakes/patterns/design/rules), session summaries.
-- Reasoning skills: using-ctx (bootstrap), brainstorming, planning, executing, tdd,
+- Reasoning skills: using-lex (bootstrap), brainstorming, planning, executing, tdd,
   debugging, verification, code-review, efficient-code, subagent-dispatch,
   finishing-branch, context-health.
 - Multi-platform delivery: Claude Code, Codex, Cursor, Windsurf, Copilot, Gemini CLI,

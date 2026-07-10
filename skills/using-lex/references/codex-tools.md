@@ -14,6 +14,6 @@
 
 ## Notes
 - Codex may need multi-agent enabled in settings for subagent dispatch
-- Reading `.ctx/` files: use `read_file` with the path
+- Reading `.lex/` files: use `read_file` with the path
 - Skills are invoked via the `skill` tool
 - If no `skill` tool available, read the SKILL.md file directly with `read_file`

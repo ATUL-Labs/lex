@@ -4,9 +4,9 @@ If your platform is not listed in the specific tool mapping files, use this univ
 
 ## Required capabilities
 
-Any agent that can do these things can use ctx:
-1. **Read files** - to load `.ctx/` knowledge
-2. **Write/edit files** - to update `.ctx/` after work
+Any agent that can do these things can use lex:
+1. **Read files** - to load `.lex/` knowledge
+2. **Write/edit files** - to update `.lex/` after work
 3. **Run commands** - to run tests, builds, git operations
 
 ## How to map actions
@@ -19,9 +19,9 @@ Then map:
 - Shell/command → whatever runs terminal commands
 - Skill invocation → if a native skill tool exists, use it. Otherwise, read the SKILL.md file with the file-read tool
 
-## The .ctx/ protocol works everywhere
+## The .lex/ protocol works everywhere
 
-`.ctx/` is just markdown files. Any agent that can read and write files can:
+`.lex/` is just markdown files. Any agent that can read and write files can:
 1. Read `status.md` and `INDEX.md` on session start
 2. Check for `wip.md` (crash recovery)
 3. Load relevant knowledge pages

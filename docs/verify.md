@@ -1,24 +1,24 @@
-# Verifying a ctx install
+# Verifying a lex install
 
-Run these checks after installing ctx on each platform. Five minutes per platform.
+Run these checks after installing lex on each platform. Five minutes per platform.
 
 ## Any platform (core protocol)
 
-1. Open a project with a `.ctx/` folder. Ask the agent: "what is the current
+1. Open a project with a `.lex/` folder. Ask the agent: "what is the current
    project state?" - it must answer from status.md WITHOUT you pasting anything.
 
 2. Start a small task, kill the session mid-way. Reopen: the agent must mention
    the interrupted work (wip.md) and offer to resume.
 
 3. Ask "where is <some function> used?" - with node installed the agent should
-   run ctx search (one command), not a chain of greps.
+   run lex search (one command), not a chain of greps.
 
 ## Claude Code (hooks - tier 1)
 
 4. Session start: bootstrap + CURRENT PROJECT STATE section appear injected
    (ask: "what did your session-start context contain?").
 
-5. Edit any file, then query `node <ctx-repo>/bin/ctx.js search <new symbol>` -
+5. Edit any file, then query `node <lex-repo>/bin/lex.js search <new symbol>` -
    the PostToolUse hook must have indexed it already (zero manual refresh).
 
 6. Run /compact, then continue working - the agent must resume silently from
@@ -30,7 +30,7 @@ Run these checks after installing ctx on each platform. Five minutes per platfor
    Windsurf rules, Antigravity instructions per README).
 
 8. Repeat checks 1-3. Additionally: after several steps of work, open
-   .ctx/wip.md yourself - it must reflect the current step (cadence rule).
+   .lex/wip.md yourself - it must reflect the current step (cadence rule).
 
 9. Cross-agent handoff (the hero scenario): start a task in Claude Code,
    close it, type "continue" in Trae - zero re-explaining expected.

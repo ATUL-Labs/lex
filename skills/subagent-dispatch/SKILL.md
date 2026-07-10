@@ -20,7 +20,7 @@ Split independent work across parallel agents for speed.
    - What to build
    - Which files to create/modify
    - How to verify
-   - Relevant `.ctx/` knowledge (copy the relevant pages into the brief, do not reference paths the agent cannot access)
+   - Relevant `.lex/` knowledge (copy the relevant pages into the brief, do not reference paths the agent cannot access)
 3. **Dispatch agents** - use your platform's subagent/task dispatch mechanism
 4. **Collect results** - review each agent's work
 5. **Integrate** - merge results, resolve any conflicts
@@ -32,15 +32,15 @@ Split independent work across parallel agents for speed.
 Task: [title]
 Context: [what this is part of, what already exists]
 Deliverable: [specific files and their purpose]
-Conventions: [from .ctx/pages/patterns.md - paste relevant lines]
-Mistakes to avoid: [from .ctx/pages/mistakes.md - paste relevant lines]
+Conventions: [from .lex/pages/patterns.md - paste relevant lines]
+Mistakes to avoid: [from .lex/pages/mistakes.md - paste relevant lines]
 Verification: [how to confirm this task is complete]
 ```
 
 ## Rules
 
 - Each agent gets a self-contained brief. They start cold with no conversation context
-- Do NOT reference `.ctx/` paths in briefs - paste the relevant knowledge directly
+- Do NOT reference `.lex/` paths in briefs - paste the relevant knowledge directly
 - After dispatch, verify each result independently before integrating
-- Log each agent's work to `.ctx/audit.log` with the agent's model and platform
+- Log each agent's work to `.lex/audit.log` with the agent's model and platform
 - If a platform has no subagent capability, do the tasks sequentially instead

@@ -34,7 +34,7 @@ start from the test. Keeping it "since it's already written" defeats the cycle.
 - Run the test and confirm it FAILS before writing implementation code. A test that passes on first run proves nothing.
 - Write the MINIMUM code to pass. Not the elegant version. Not the complete version. The minimum.
 - One behavior per test. Test names describe behavior: `it_returns_404_for_unknown_slug`
-- Use the project's existing test framework and patterns (check `.ctx/pages/patterns.md`)
+- Use the project's existing test framework and patterns (check `.lex/pages/patterns.md`)
 - Use factories/builders for test data, not hand-written arrays
 - Fix the implementation, not the test (unless the test is wrong)
 - After TDD: run the full test suite to check for regressions

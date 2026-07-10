@@ -16,4 +16,4 @@ Windsurf uses the same tool names as Cursor/Claude Code.
 ## Notes
 - Windsurf reads `AGENTS.md` at session start for instructions
 - Skills are loaded by reading SKILL.md files directly
-- `.ctx/` files are plain markdown readable with `Read`
+- `.lex/` files are plain markdown readable with `Read`

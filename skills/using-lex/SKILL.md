@@ -1,28 +1,28 @@
 ---
-name: using-ctx
-description: Bootstrap for ctx - the universal coding companion. Loaded every session. Establishes the protocol for project memory, skill invocation, reasoning steps, token efficiency, and crash recovery. Must fire before any other action.
+name: using-lex
+description: Bootstrap for lex - the universal coding companion. Loaded every session. Establishes the protocol for project memory, skill invocation, reasoning steps, token efficiency, and crash recovery. Must fire before any other action.
 ---
 
-# ctx - Universal Coding Companion
+# lex - Universal Coding Companion
 
-You have ctx installed. It gives you project memory, reasoning steps, efficient code style, design intelligence, token-efficient operation, and crash recovery.
+You have lex installed. It gives you project memory, reasoning steps, efficient code style, design intelligence, token-efficient operation, and crash recovery.
 
 ## Session Start Protocol
 
 Every session, before ANY response:
 
-1. Check if `.ctx/` folder exists in the project root
-   - YES: Read `.ctx/status.md` (~30 lines). Check if `.ctx/wip.md` exists (crash recovery).
+1. Check if `.lex/` folder exists in the project root
+   - YES: Read `.lex/status.md` (~30 lines). Check if `.lex/wip.md` exists (crash recovery).
    - NO: This is a new project. Offer to run `/context-health` to initialize.
 2. If `wip.md` exists after a compaction in the SAME conversation: continue silently.
    If it exists on a COLD start (new conversation): show the user what was in
    progress in 2-3 lines. Ask: resume or start fresh?
-3. Scan `.ctx/INDEX.md` to know what knowledge exists. Do NOT load knowledge pages yet.
+3. Scan `.lex/INDEX.md` to know what knowledge exists. Do NOT load knowledge pages yet.
 
 ## Before Any Task
 
 4. Determine task type: UI, backend, bug fix, new feature, refactor, docs
-5. Load ONLY the relevant knowledge pages from `.ctx/pages/`:
+5. Load ONLY the relevant knowledge pages from `.lex/pages/`:
    - Bug fix: `mistakes.md`
    - UI work: `design.md` + `patterns.md`; then follow the design-intelligence
      skill's loading rule (one style page + picked palette/fonts only)
@@ -30,7 +30,14 @@ Every session, before ANY response:
    - New feature: `patterns.md` + `design.md`
    - Setup/boot/test/deploy questions: `run.md`
    - Any task: check `mistakes.md` if doing something similar to a past failure
-6. Do NOT bulk-load all pages. Token budget for .ctx/ content: under 200 lines per session.
+6. Do NOT bulk-load all pages. Token budget for .lex/ content: under 200 lines per session.
+7. **Stack overlay**: check `.lex/pages/stack.md` for the detected overlay key
+   (php, rust, python, typescript, go). When you invoke ANY skill that has an
+   overlays/ directory, also load `skills/<skill>/overlays/<overlay>.md`
+   alongside the skill's SKILL.md. The overlay adds stack-specific tools,
+   patterns, bug catalogs, and review checks. ~30-50 extra lines, loaded only
+   when that skill fires. If no overlay exists for the detected stack, proceed
+   with the core skill alone.
 
 ## Before Writing Code
 
@@ -44,7 +51,14 @@ Every session, before ANY response:
 8. Does this match the project's patterns? (check `patterns.md` if loaded)
 9. If UI: is this intentional design or template-looking? Never boring. Never what every AI generates.
 10. Unfamiliar or version-sensitive API? Invoke the docs-cache skill: check
-    `ctx docs <term>` before writing the call, fetch-and-distill on miss.
+    `lex docs <term>` before writing the call, fetch-and-distill on miss.
+11. **Secrets check**: about to write any API key, password, token, or
+    connection string? STOP. It goes in `.env`, not in code. Check that `.env`
+    is in `.gitignore` before creating it. See the security skill.
+12. **Database design**: creating a table or migration? Read the
+    database-architecture skill first. Prefer wide tables over join farms.
+    Never create a 1-to-1 table. Never create a table for bounded (1-to-few)
+    relationships. Denormalize fields that are read together.
 
 ## Code Output Rules
 
@@ -109,22 +123,26 @@ After ANY compaction or context loss: state was already rehydrated or is one rea
 away (status.md + wip.md). CONTINUE the work silently from the current step. Do not
 ask the user to re-explain. Do not re-derive what the files already say.
 
-## Structural Queries (ctx-index)
+## Structural Queries (lex-index)
 
-The plugin ships a self-maintaining SQLite index (`.ctx/index.db`, regenerable,
+The plugin ships a self-maintaining SQLite index (`.lex/index.db`, regenerable,
 gitignored). When node is available, prefer one index query over grep-and-read chains:
 
 Structural-query ladder: if a code-graph MCP (e.g. codebase-memory-mcp) is
 connected, use it for call-graphs, dead code, and trace-paths; for
-where-is-X and references use `ctx search`; if node is unavailable, grep.
+where-is-X and references use `lex search`; if node is unavailable, grep.
 
-- Where is something: `node "<plugin-root>/bin/ctx.js" search <terms>` (10 lines max)
+- Where is something: `node "<plugin-root>/bin/lex.js" search <terms>` (10 lines max)
 - Search terms are ANDed - prefer one distinctive term over several common ones.
-- What is in a file: `node "<plugin-root>/bin/ctx.js" symbols <file>` (skip reading whole files)
-- What talks to a route: `node "<plugin-root>/bin/ctx.js" links dashboard/tasks` (backend route + frontend consumers; slashless form avoids Git Bash path mangling on Windows)
-- Stack docs: `node "<plugin-root>/bin/ctx.js" docs <term>` searches the global
-  distilled docs cache (~/.ctx/docs/), built up by the docs-cache skill.
-- Large legacy folders: list path prefixes in `.ctx/ignore` (one per line) to exclude them from indexing.
+- What is in a file: `node "<plugin-root>/bin/lex.js" symbols <file>` (skip reading whole files)
+- What talks to a route: `node "<plugin-root>/bin/lex.js" links dashboard/tasks` (backend route + frontend consumers; slashless form avoids Git Bash path mangling on Windows)
+- Stack docs: `node "<plugin-root>/bin/lex.js" docs <term>` searches the global
+  distilled docs cache (~/.lex/docs/), built up by the docs-cache skill.
+- Large legacy folders: list path prefixes in `.lex/ignore` (one per line) to exclude them from indexing.
+- **Codebase guard**: `node "<plugin-root>/bin/lex.js" guard` scans all source
+  files for exposed secrets (API keys, passwords, tokens, connection strings)
+  and database anti-patterns (1-to-1 tables, EAV, settings tables). Exits with
+  code 1 if CRITICAL violations are found. Run before every commit.
 
 On Claude Code, `<plugin-root>` is `${CLAUDE_PLUGIN_ROOT}`; a PostToolUse hook keeps
 the index fresh automatically. On other platforms the index lazily refreshes on every
@@ -134,7 +152,7 @@ are out of scope by design; `search` gives reference-level answers.
 
 ## During Work
 
-10. Create `.ctx/wip.md` at task start:
+11. Create `.lex/wip.md` at task start:
     ```markdown
     # Work In Progress
     started: YYYY-MM-DD HH:MM
@@ -155,20 +173,20 @@ are out of scope by design; `search` gives reference-level answers.
     ## Current state
     (what's done, what's left)
     ```
-11. Update `wip.md` checkboxes after each significant step.
-12. Append to `.ctx/audit.log`: `YYYY-MM-DD HH:MM | agent | platform | action | target`
+12. Update `wip.md` checkboxes after each significant step.
+13. Append to `.lex/audit.log`: `YYYY-MM-DD HH:MM | agent | platform | action | target`
 
 ## After Completing Work
 
-13. Delete `.ctx/wip.md`
-14. Rewrite `.ctx/status.md` with current state (~30 lines max)
-15. Append compressed session summary to `.ctx/sessions/YYYY-MM-DD.md`
-16. Extract learnings:
+14. Delete `.lex/wip.md`
+15. Rewrite `.lex/status.md` with current state (~30 lines max)
+16. Append compressed session summary to `.lex/sessions/YYYY-MM-DD.md`
+17. Extract learnings:
     - New pattern discovered: append to `pages/patterns.md`
     - Something broke: append to `pages/mistakes.md`
     - Design decision made: append to `pages/design.md`
-17. Update `.ctx/INDEX.md` if new pages were added
-18. Final audit.log entry for session end
+18. Update `.lex/INDEX.md` if new pages were added
+19. Final audit.log entry for session end
 
 ## Auto-Grow: When Structure Changes
 
@@ -188,7 +206,7 @@ When dependencies change (new packages installed, packages removed):
 
 The knowledge base must reflect the project AS IT IS, not as it was. Stale knowledge is worse than no knowledge.
 
-## Auto-Prune: Keeping .ctx/ Lean
+## Auto-Prune: Keeping .lex/ Lean
 
 When `sessions/` has more than 20 files:
 - Summarize the oldest sessions into phase summaries in `pages/`
@@ -215,8 +233,8 @@ wip.md is the handoff signal:
 
 For simultaneous agents working on the SAME project:
 - Each agent should work in its own git branch or worktree
-- .ctx/ lives on the main branch - read it before branching
-- After merging back, the merging agent updates .ctx/
+- .lex/ lives on the main branch - read it before branching
+- After merging back, the merging agent updates .lex/
 - audit.log is append-only - both entries survive a merge
 - Knowledge pages: if both agents added entries, keep both on merge
 - status.md: the agent that merges last rewrites it with current state
@@ -260,10 +278,28 @@ Invoke these via your platform's skill tool when they apply. If no skill tool ex
 | verification | About to claim work is done | Before committing or saying "done" |
 | code-review | Code was written or modified | After writing code, before merge |
 | efficient-code | Writing any code | Always active - shortest diff, YAGNI |
+| security | Any code, any file | Always active - never expose secrets |
 | design-intelligence | UI or frontend work | Any visual component, page, or layout |
+| database-architecture | Designing schema, creating migrations, planning data model | Before creating tables or migrations |
 | subagent-dispatch | 2+ independent tasks | Tasks with no shared state |
 | finishing-branch | Implementation complete, tests pass | Before merge, PR, or cleanup |
 | context-health | Context growing large, session long | When approaching context limits |
+
+### Stack Overlays
+
+Skills with an `overlays/` directory have stack-specific variants. When the
+project's detected overlay (from `stack.md`) matches a file in that directory,
+load it alongside the core SKILL.md. Overlays exist for: php, rust, python,
+typescript, go.
+
+Skills with overlays: debugging, tdd, code-review, efficient-code.
+
+### Always-Active Stances
+
+Three skills are stances, not invocations - they apply to EVERY line of code:
+- **efficient-code**: YAGNI, shortest diff, no bloat
+- **security**: never inline secrets, never commit .env, always check for exposed keys
+- **database-architecture**: wide tables over join farms, denormalize-first (when creating tables/migrations)
 
 ## Skill Priority
 
@@ -271,7 +307,8 @@ Invoke these via your platform's skill tool when they apply. If no skill tool ex
 2. Implementation skills second: tdd, design-intelligence (guide execution)
 3. Quality skills last: verification, code-review (confirm correctness)
 
-efficient-code is always active. It's not invoked - it's a stance.
+efficient-code and security are always active. They're not invoked - they're
+stances. database-architecture activates when designing schemas or migrations.
 
 ## Platform Adaptation
 
@@ -279,14 +316,23 @@ Skills describe actions, not tool names. Per-platform tool mappings: see referen
 
 ## The Non-Negotiables
 
-- NEVER skip `.ctx/` updates after work. The next agent depends on it.
+- NEVER skip `.lex/` updates after work. The next agent depends on it.
 - NEVER bulk-load all knowledge pages. Load only what the task needs.
 - NEVER leave `wip.md` after completing work. Delete it.
 - NEVER re-read a file you already read this session without reason.
 - NEVER design boring UI. If it looks like every AI-generated template, redo it.
 - NEVER add code comments explaining WHAT. Only comment WHY when non-obvious.
 - NEVER use em dashes anywhere. Hyphens (-) only.
+- NEVER write API keys, passwords, tokens, or connection strings inline in code.
+- NEVER commit `.env` or any file containing real secrets.
+- NEVER create a 1-to-1 database table. Put the columns on the parent table.
+- NEVER create a database table for bounded (1-to-few) relationships. Use columns.
+- NEVER use EAV (entity-attribute-value) tables. Use JSON columns.
 - ALWAYS log to audit.log. The trail is how we know who did what.
 - ALWAYS check wip.md on session start. Crash recovery is not optional.
 - ALWAYS update stack.md when project structure changes.
 - ALWAYS remove stale references when files are deleted.
+- ALWAYS ensure `.env` is in `.gitignore` before creating any `.env` file.
+- ALWAYS scan for exposed secrets before committing (string patterns, config files, test fixtures).
+- ALWAYS prefer wide tables over many small tables with foreign keys. Denormalize first.
+- ALWAYS list read patterns before designing a database schema.

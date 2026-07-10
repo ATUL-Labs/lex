@@ -6,37 +6,37 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const CLI = path.join(__dirname, '..', 'bin', 'ctx.js');
+const CLI = path.join(__dirname, '..', 'bin', 'lex.js');
 
 function run(cwd, args) {
   return execFileSync('node', [CLI, ...args], { cwd, encoding: 'utf8' });
 }
 
-test('init scaffolds .ctx from templates', () => {
+test('init scaffolds .lex from templates', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctxinit-'));
   const out = run(dir, ['init']);
   assert.match(out, /next: run/);
-  assert.ok(fs.existsSync(path.join(dir, '.ctx', 'status.md')));
-  assert.ok(fs.existsSync(path.join(dir, '.ctx', 'INDEX.md')));
-  assert.ok(fs.existsSync(path.join(dir, '.ctx', 'pages', 'mistakes.md')));
-  assert.ok(fs.existsSync(path.join(dir, '.ctx', 'pages', 'design.md')));
-  assert.ok(fs.existsSync(path.join(dir, '.ctx', 'sessions')));
+  assert.ok(fs.existsSync(path.join(dir, '.lex', 'status.md')));
+  assert.ok(fs.existsSync(path.join(dir, '.lex', 'INDEX.md')));
+  assert.ok(fs.existsSync(path.join(dir, '.lex', 'pages', 'mistakes.md')));
+  assert.ok(fs.existsSync(path.join(dir, '.lex', 'pages', 'design.md')));
+  assert.ok(fs.existsSync(path.join(dir, '.lex', 'sessions')));
   const gi = fs.readFileSync(path.join(dir, '.gitignore'), 'utf8');
-  assert.match(gi, /\.ctx\/index\.db\*/);
-  assert.match(gi, /\.ctx\/live\.json/);
+  assert.match(gi, /\.lex\/index\.db\*/);
+  assert.match(gi, /\.lex\/live\.json/);
 });
 
 test('init is idempotent and never overwrites existing content', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctxinit2-'));
   run(dir, ['init']);
-  fs.writeFileSync(path.join(dir, '.ctx', 'status.md'), 'MY_CUSTOM_STATUS\n');
+  fs.writeFileSync(path.join(dir, '.lex', 'status.md'), 'MY_CUSTOM_STATUS\n');
   fs.writeFileSync(path.join(dir, '.gitignore'), 'node_modules/\n');
   run(dir, ['init']);
-  const status = fs.readFileSync(path.join(dir, '.ctx', 'status.md'), 'utf8');
+  const status = fs.readFileSync(path.join(dir, '.lex', 'status.md'), 'utf8');
   assert.match(status, /MY_CUSTOM_STATUS/);
   const gi = fs.readFileSync(path.join(dir, '.gitignore'), 'utf8');
   assert.match(gi, /node_modules\//);
-  assert.match(gi, /\.ctx\/index\.db\*/);
+  assert.match(gi, /\.lex\/index\.db\*/);
 });
 
 test('init works when .gitignore does not exist', () => {
@@ -53,8 +53,8 @@ test('init does not crash when templates are missing', () => {
   fs.mkdirSync(binDir, { recursive: true });
   fs.mkdirSync(libDir, { recursive: true });
 
-  // Copy bin/ctx.js and lib/* to fake plugin, but NO templates/
-  fs.copyFileSync(CLI, path.join(binDir, 'ctx.js'));
+  // Copy bin/lex.js and lib/* to fake plugin, but NO templates/
+  fs.copyFileSync(CLI, path.join(binDir, 'lex.js'));
   const realLibDir = path.join(__dirname, '..', 'lib');
   for (const f of fs.readdirSync(realLibDir)) {
     const src = path.join(realLibDir, f);
@@ -66,8 +66,8 @@ test('init does not crash when templates are missing', () => {
     }
   }
 
-  // Run ctx init with fake plugin root (missing templates)
-  const out = execFileSync('node', [path.join(binDir, 'ctx.js'), 'init', targetDir], {
+  // Run lex init with fake plugin root (missing templates)
+  const out = execFileSync('node', [path.join(binDir, 'lex.js'), 'init', targetDir], {
     encoding: 'utf8',
     cwd: fakePluginRoot,
     stdio: ['pipe', 'pipe', 'pipe']
@@ -75,8 +75,8 @@ test('init does not crash when templates are missing', () => {
 
   // Should succeed with warning, not crash
   assert.match(out, /next: run/);
-  assert.ok(fs.existsSync(path.join(targetDir, '.ctx')));
-  assert.ok(fs.existsSync(path.join(targetDir, '.ctx', 'pages')));
-  assert.ok(fs.existsSync(path.join(targetDir, '.ctx', 'sessions')));
+  assert.ok(fs.existsSync(path.join(targetDir, '.lex')));
+  assert.ok(fs.existsSync(path.join(targetDir, '.lex', 'pages')));
+  assert.ok(fs.existsSync(path.join(targetDir, '.lex', 'sessions')));
   assert.ok(fs.existsSync(path.join(targetDir, '.gitignore')));
 });

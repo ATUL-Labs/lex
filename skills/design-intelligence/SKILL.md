@@ -33,10 +33,10 @@ On a project's FIRST UI task:
    references/styles/), a palette (from references/palettes.md), and a type
    pair (from references/font-pairings.md). One sentence each on why.
 2. Get explicit user approval before writing any UI code.
-3. Write the approved identity to `.ctx/pages/design.md`: style name, the
+3. Write the approved identity to `.lex/pages/design.md`: style name, the
    token block, palette hexes, font pair, and any project-specific overrides.
 
-Every LATER UI task: load `.ctx/pages/design.md` FIRST. The project identity
+Every LATER UI task: load `.lex/pages/design.md` FIRST. The project identity
 overrides the library. Never propose a new direction mid-project unless the
 user asks for a redesign.
 

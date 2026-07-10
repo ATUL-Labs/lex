@@ -35,7 +35,7 @@ Stop at the first rung that holds:
 - NEVER use em dashes. Use hyphens (-) or rephrase. Enforced everywhere - code, comments, output, commits
 - No emojis in code or output unless user requests them
 - Two stdlib options, same size? Take the one correct on edge cases
-- Mark deliberate simplifications: `// ctx: description + upgrade path if needed`
+- Mark deliberate simplifications: `// lex: description + upgrade path if needed`
 - Three similar lines is better than a premature abstraction
 
 ## Intensity Levels

@@ -1,8 +1,8 @@
 {
-  "name": "ctx",
-  "displayName": "ctx",
+  "name": "lex",
+  "displayName": "lex",
   "description": "Universal coding companion - reasoning, efficient code, design intelligence, project memory, crash recovery.",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "author": {
     "name": "pulak-ranjan",
     "url": "https://github.com/pulak-ranjan"

@@ -17,7 +17,7 @@ Implementation done, tests pass. Now decide how to integrate.
    - **Squash and merge** - if many small commits should be one clean commit
    - **Clean up only** - user will handle integration themselves
 4. **Execute the chosen option**
-5. **Update `.ctx/`** - status.md, session summary, clean up wip.md
+5. **Update `.lex/`** - status.md, session summary, clean up wip.md
 
 ## PR Format
 
@@ -29,7 +29,7 @@ Implementation done, tests pass. Now decide how to integrate.
 - [ ] Verification steps
 - [ ] Edge cases checked
 
-Generated with ctx
+Generated with lex
 ```
 
 ## Rules
@@ -38,4 +38,4 @@ Generated with ctx
 - Never force-push to main/master without explicit user approval
 - Never skip hooks (--no-verify) unless user explicitly asks
 - If the branch has merge conflicts, resolve them before proceeding
-- Log the integration action to `.ctx/audit.log`
+- Log the integration action to `.lex/audit.log`

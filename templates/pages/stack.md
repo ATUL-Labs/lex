@@ -23,3 +23,8 @@
 - Config: 
 - Routes: 
 - Entry point: 
+
+## Stack Overlay
+- Detected overlay: (auto-filled by lex init - php, rust, python, typescript, or go)
+- When invoking any skill, also load skills/<skill>/overlays/<overlay>.md
+  for stack-specific techniques, patterns, and review checks

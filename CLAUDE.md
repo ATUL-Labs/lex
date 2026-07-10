@@ -1,7 +1,7 @@
-# ctx - Universal Coding Companion
+# lex - Universal Coding Companion
 
 This plugin provides reasoning, efficient code, design intelligence, project memory, and crash recovery.
 
-On session start, the `using-ctx` skill is injected automatically via hooks. All other skills are invoked on demand.
+On session start, the `using-lex` skill is injected automatically via hooks. All other skills are invoked on demand.
 
-When the user types `/ctx`, invoke the Skill tool with `skill: "using-ctx"` before doing anything else.
+When the user types `/lex`, invoke the Skill tool with `skill: "using-lex"` before doing anything else.

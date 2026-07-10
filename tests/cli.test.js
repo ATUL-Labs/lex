@@ -6,11 +6,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const CLI = path.join(__dirname, '..', 'bin', 'ctx.js');
+const CLI = path.join(__dirname, '..', 'bin', 'lex.js');
 
 function makeProject() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ctxcli-'));
-  fs.mkdirSync(path.join(root, '.ctx'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.lex'), { recursive: true });
   fs.mkdirSync(path.join(root, 'routes'), { recursive: true });
   fs.mkdirSync(path.join(root, 'src'), { recursive: true });
   fs.writeFileSync(path.join(root, 'routes', 'web.php'), "<?php\nRoute::patch('/dashboard/tasks/{task}', 'UserTaskController@update');\n");
@@ -53,9 +53,9 @@ test('links accepts slashless form (immune to Git Bash path mangling)', () => {
   assert.match(slashless, /consumer\s+patch\s+\/dashboard\/tasks\/\*\s+src\/Tasks\.tsx:1/);
 });
 
-test('no .ctx folder: polite exit 1', () => {
+test('no .lex folder: polite exit 1', () => {
   const bare = fs.mkdtempSync(path.join(os.tmpdir(), 'ctxbare-'));
-  assert.throws(() => run(bare, ['search', 'anything']), (e) => e.status === 1 && /no \.ctx folder/.test(e.stderr));
+  assert.throws(() => run(bare, ['search', 'anything']), (e) => e.status === 1 && /no \.lex folder/.test(e.stderr));
 });
 
 test('hook-update indexes the written file and always exits 0', () => {
@@ -74,7 +74,7 @@ test('docs command searches the global cache via env-overridden dirs', () => {
   const dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctxdocsdb-'));
   fs.mkdirSync(path.join(docsDir, 'laravel-12'), { recursive: true });
   fs.writeFileSync(path.join(docsDir, 'laravel-12', 'eloquent.md'), '# Eloquent\nscopeOrdered requires grouped orWhere closures\n');
-  const env = { CTX_DOCS_DIR: docsDir, CTX_DOCS_DB: path.join(dbDir, 'docs.db') };
+  const env = { LEX_DOCS_DIR: docsDir, LEX_DOCS_DB: path.join(dbDir, 'docs.db') };
   const anyCwd = fs.mkdtempSync(path.join(os.tmpdir(), 'ctxanywhere-'));
   const out = runDocs(anyCwd, ['docs', 'orWhere'], env);
   assert.match(out, /laravel-12\/eloquent\.md/);
@@ -84,7 +84,7 @@ test('docs command searches the global cache via env-overridden dirs', () => {
 
 test('docs command without a cache dir exits 0 with guidance', () => {
   const missing = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'ctxnone-')), 'docs');
-  const env = { CTX_DOCS_DIR: missing, CTX_DOCS_DB: missing + '.db' };
+  const env = { LEX_DOCS_DIR: missing, LEX_DOCS_DB: missing + '.db' };
   const out = runDocs(process.cwd(), ['docs', 'anything'], env);
   assert.match(out, /no docs cache yet/);
 });
@@ -102,7 +102,7 @@ function spawnServe(root, port) {
     let out = '';
     const onData = (chunk) => {
       out += chunk;
-      const m = out.match(/ctx viewer: http:\/\/127\.0\.0\.1:(\d+)/);
+      const m = out.match(/lex viewer: http:\/\/127\.0\.0\.1:(\d+)/);
       if (m) { child.stdout.removeListener('data', onData); resolve({ child, port: Number(m[1]) }); }
     };
     child.stdout.on('data', onData);

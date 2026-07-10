@@ -15,7 +15,7 @@
 | Search the web | `WebSearch` - load via `ToolSearch` first |
 
 ## Notes
-- Use `Read` to load `.ctx/` files, never `Bash` with `cat`
+- Use `Read` to load `.lex/` files, never `Bash` with `cat`
 - Use `Edit` for modifying existing files, `Write` for creating new ones
 - Use `Grep` for finding patterns in code, `Glob` for finding files by name
 - Skills are invoked via the `Skill` tool: `skill: "brainstorming"`, `skill: "tdd"`, etc.

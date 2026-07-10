@@ -1,19 +1,19 @@
 ---
 name: context-health
-description: Manage .ctx/ folder health - compress sessions, update index, prevent context overflow. Use when context is growing large, starting a new session, or doing maintenance.
+description: Manage .lex/ folder health - compress sessions, update index, prevent context overflow. Use when context is growing large, starting a new session, or doing maintenance.
 ---
 
 # Context Health
 
-Keep the .ctx/ folder lean and useful. Prevent context overflow.
+Keep the .lex/ folder lean and useful. Prevent context overflow.
 
 ## Initialize a Project
 
-When `.ctx/` does not exist:
+When `.lex/` does not exist:
 
 1. Create the folder structure:
    ```
-   .ctx/
+   .lex/
      INDEX.md
      status.md
      audit.log
@@ -53,7 +53,7 @@ When a knowledge page exceeds 100 lines:
 
 ## Token Budget
 
-The ctx protocol should never consume more than 200 lines of context per session:
+The lex protocol should never consume more than 200 lines of context per session:
 - status.md: ~30 lines (always loaded)
 - INDEX.md: ~30 lines (always loaded)
 - Knowledge pages: ~100 lines total (only relevant ones loaded)
@@ -63,13 +63,13 @@ If approaching this budget, summarize rather than include raw content.
 
 ## Index Maintenance
 
-INDEX.md must always reflect reality. After any change to `.ctx/`:
+INDEX.md must always reflect reality. After any change to `.lex/`:
 - Add new pages
 - Remove deleted pages
 - Update line counts and summaries
 
 ## Index Hygiene
 
-When initializing `.ctx/`, ensure the project `.gitignore` contains `.ctx/index.db`
-(plus its `-wal`/`-shm` siblings via `.ctx/index.db*`). The index is regenerable;
+When initializing `.lex/`, ensure the project `.gitignore` contains `.lex/index.db`
+(plus its `-wal`/`-shm` siblings via `.lex/index.db*`). The index is regenerable;
 never commit it, never treat it as a source of truth.

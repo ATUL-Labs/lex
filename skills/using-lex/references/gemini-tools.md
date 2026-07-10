@@ -12,6 +12,6 @@
 | Dispatch a subagent | Not natively available - do tasks sequentially |
 
 ## Notes
-- Gemini loads ctx via the GEMINI.md context file (includes SKILL.md + this mapping)
+- Gemini loads lex via the GEMINI.md context file (includes SKILL.md + this mapping)
 - To invoke a skill: use `activate_skill` if available, otherwise `read_file` on the skill's SKILL.md
-- `.ctx/` files are plain markdown - read them with `read_file`
+- `.lex/` files are plain markdown - read them with `read_file`

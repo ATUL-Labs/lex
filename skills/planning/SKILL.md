@@ -11,7 +11,7 @@ Turn a spec into an executable step-by-step plan.
 ## Process
 
 1. **Read the spec** - understand what's being built and why
-2. **Check `.ctx/`** - load `patterns.md` for conventions, `mistakes.md` for what to avoid
+2. **Check `.lex/`** - load `patterns.md` for conventions, `mistakes.md` for what to avoid
 3. **Decompose into tasks** - each task is independently testable, has clear inputs/outputs
 4. **Order by dependencies** - what must exist before what
 5. **Write the plan** - save to `docs/plans/YYYY-MM-DD-<topic>.md`
@@ -28,7 +28,7 @@ Each task in the plan:
 **Files:** List of files to create or modify
 **Depends on:** Task numbers that must be done first
 **Test:** How to verify this task is complete
-**Notes:** Constraints, gotchas, or references to .ctx/ knowledge
+**Notes:** Constraints, gotchas, or references to .lex/ knowledge
 ```
 
 ## Rules
@@ -36,8 +36,8 @@ Each task in the plan:
 - Each task should be completable in one focused session
 - Tasks must be independently verifiable (tests, build check, or manual verification)
 - Order tasks so the project builds incrementally and is always in a working state
-- Reference `.ctx/pages/patterns.md` for naming conventions, folder structure
-- Flag tasks that touch areas mentioned in `.ctx/pages/mistakes.md`
+- Reference `.lex/pages/patterns.md` for naming conventions, folder structure
+- Flag tasks that touch areas mentioned in `.lex/pages/mistakes.md`
 - No speculative tasks. Only what the spec requires
 
 ## After Planning

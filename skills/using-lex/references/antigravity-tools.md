@@ -22,5 +22,5 @@ Antigravity has no `Skill` tool. To load a skill, read its `SKILL.md` with `view
 
 ## Notes
 - `manage_task` manages background processes, NOT todos. Use task artifacts for checklists
-- `.ctx/` files are plain markdown - read with `view_file`, update with `replace_file_content`
+- `.lex/` files are plain markdown - read with `view_file`, update with `replace_file_content`
 - Subagent `TypeName: "self"` can write files and run commands. `TypeName: "research"` is read-only
