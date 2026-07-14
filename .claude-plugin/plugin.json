@@ -1,7 +1,7 @@
 {
   "name": "lex",
   "description": "The shared brain for developers who work across many AI coding agents - continuity, project memory, structural index, design intelligence, crash recovery.",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "author": {
     "name": "pulak-ranjan",
     "url": "https://github.com/pulak-ranjan"

@@ -104,6 +104,26 @@ function isGlobalInstall(pluginRoot) {
          normalized.includes('/usr/lib/node_modules/@atul-labs/lex');
 }
 
+function copyDir(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const s = path.join(src, entry.name);
+    const d = path.join(dest, entry.name);
+    if (entry.isDirectory()) copyDir(s, d);
+    else if (entry.isFile()) fs.copyFileSync(s, d);
+  }
+}
+
+function countFiles(dir) {
+  let n = 0;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, entry.name);
+    if (entry.isDirectory()) n += countFiles(p);
+    else n++;
+  }
+  return n;
+}
+
 const SECRET_PATTERNS = [
   { re: /sk-[a-zA-Z0-9]{20,}/, name: 'OpenAI API key' },
   { re: /pk_[a-zA-Z0-9]{20,}/, name: 'Stripe public key' },
@@ -1102,6 +1122,14 @@ function initCmd(dir) {
   copyIfMissing(path.join(pluginRoot, 'CLAUDE.md'), path.join(dir, 'CLAUDE.md'), 'CLAUDE.md');
   copyIfMissing(path.join(pluginRoot, 'GEMINI.md'), path.join(dir, 'GEMINI.md'), 'GEMINI.md');
   copyIfMissing(path.join(pluginRoot, 'ANTIGRAVITY.md'), path.join(dir, 'ANTIGRAVITY.md'), 'ANTIGRAVITY.md');
+
+  // Copy skills directory so agents can read skill files from the project
+  const skillsSrc = path.join(pluginRoot, 'skills');
+  const skillsDest = path.join(dir, 'skills');
+  if (fs.existsSync(skillsSrc) && !fs.existsSync(skillsDest)) {
+    copyDir(skillsSrc, skillsDest);
+    created.push('skills/ (' + countFiles(skillsDest) + ' files)');
+  }
 
   const gitDir = path.join(dir, '.git');
   if (fs.existsSync(gitDir)) {

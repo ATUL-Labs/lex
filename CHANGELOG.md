@@ -2,6 +2,13 @@
 
 All notable changes to lex. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.17] - 2026-07-14
+
+### Added
+- **`lex init` copies skills/ into each project** - all 56 skill files (160 KB)
+  are copied so agents can read `skills/<name>/SKILL.md` directly from the project.
+  Skills are only copied if `skills/` doesn't already exist (non-destructive).
+
 ## [0.1.16] - 2026-07-14
 
 ### Added
