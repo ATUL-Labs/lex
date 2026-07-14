@@ -96,6 +96,14 @@ function findRoot(from) {
   }
 }
 
+function isGlobalInstall(pluginRoot) {
+  const normalized = pluginRoot.replace(/\\/g, '/').toLowerCase();
+  return normalized.includes('/node_modules/@atul-labs/lex') ||
+         normalized.includes('/appdata/roaming/npm/node_modules/@atul-labs/lex') ||
+         normalized.includes('/usr/local/lib/node_modules/@atul-labs/lex') ||
+         normalized.includes('/usr/lib/node_modules/@atul-labs/lex');
+}
+
 const SECRET_PATTERNS = [
   { re: /sk-[a-zA-Z0-9]{20,}/, name: 'OpenAI API key' },
   { re: /pk_[a-zA-Z0-9]{20,}/, name: 'Stripe public key' },
@@ -1089,12 +1097,19 @@ function initCmd(dir) {
 
   copyIfMissing(path.join(templates, 'agent.json'), path.join(lex, 'agent.json'), '.lex/agent.json');
 
+  // Copy agent instruction files so agents discover lex in this project
+  copyIfMissing(path.join(pluginRoot, 'AGENTS.md'), path.join(dir, 'AGENTS.md'), 'AGENTS.md');
+  copyIfMissing(path.join(pluginRoot, 'CLAUDE.md'), path.join(dir, 'CLAUDE.md'), 'CLAUDE.md');
+  copyIfMissing(path.join(pluginRoot, 'GEMINI.md'), path.join(dir, 'GEMINI.md'), 'GEMINI.md');
+  copyIfMissing(path.join(pluginRoot, 'ANTIGRAVITY.md'), path.join(dir, 'ANTIGRAVITY.md'), 'ANTIGRAVITY.md');
+
   const gitDir = path.join(dir, '.git');
   if (fs.existsSync(gitDir)) {
     const hooksDir = path.join(gitDir, 'hooks');
     try { fs.mkdirSync(hooksDir, { recursive: true }); } catch {}
     const preCommit = path.join(hooksDir, 'pre-commit');
-    const hookContent = '#!/usr/bin/env bash\nset -euo pipefail\nLEX_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo .)"\nif [ -d "$LEX_ROOT/.lex" ] && command -v node >/dev/null 2>&1; then\n  LEX_BIN="$(find "$LEX_ROOT" -maxdepth 3 -path "*/bin/lex.js" -not -path "*/.lex/*" 2>/dev/null | head -1)"\n  if [ -n "$LEX_BIN" ]; then\n    node "$LEX_BIN" guard "$LEX_ROOT" 2>&1\n    GUARD_EXIT=$?\n    if [ $GUARD_EXIT -ne 0 ]; then\n      echo "lex guard: CRITICAL violations found - commit blocked"\n      echo "Run: node \\"$LEX_BIN\\" guard for details"\n      exit 1\n    fi\n  fi\nfi\nexit 0\n';
+    const lexBin = path.join(pluginRoot, 'bin', 'lex.js').replace(/\\/g, '/');
+    const hookContent = '#!/usr/bin/env bash\nset -euo pipefail\nLEX_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo .)"\nif [ -d "$LEX_ROOT/.lex" ] && command -v node >/dev/null 2>&1; then\n  LEX_BIN="$(find "$LEX_ROOT" -maxdepth 3 -path "*/bin/lex.js" -not -path "*/.lex/*" 2>/dev/null | head -1)"\n  if [ -z "$LEX_BIN" ] && command -v lex >/dev/null 2>&1; then\n    LEX_BIN="$(node -e "try{process.stdout.write(require.resolve(\'@atul-labs/lex/bin/lex.js\'))}catch{process.stdout.write(\'\')}")"\n  fi\n  if [ -z "$LEX_BIN" ]; then\n    LEX_BIN="' + lexBin + '"\n  fi\n  if [ -n "$LEX_BIN" ] && [ -f "$LEX_BIN" ]; then\n    node "$LEX_BIN" guard "$LEX_ROOT" 2>&1\n    GUARD_EXIT=$?\n    if [ $GUARD_EXIT -ne 0 ]; then\n      echo "lex guard: CRITICAL violations found - commit blocked"\n      echo "Run: node \\"$LEX_BIN\\" guard for details"\n      exit 1\n    fi\n  fi\nfi\nexit 0\n';
     let existing = '';
     try { existing = fs.readFileSync(preCommit, 'utf8'); } catch {}
     if (!existing.includes('lex guard')) {
@@ -1106,7 +1121,8 @@ function initCmd(dir) {
   if (created.length) process.stdout.write('created: ' + created.join(', ') + '\n');
   if (skipped.length) process.stdout.write('already present (untouched): ' + skipped.join(', ') + '\n');
   if (missing.length) process.stderr.write('warning: plugin templates missing (reinstall lex?): ' + missing.join(', ') + '\n');
-  process.stdout.write('next: run "node ' + pluginRoot + '/bin/lex.js serve" for the live viewer\n');
+  const lexCmd = isGlobalInstall(pluginRoot) ? 'lex' : ('node ' + pluginRoot + '/bin/lex.js');
+  process.stdout.write('next: run "' + lexCmd + ' serve" for the live viewer\n');
 }
 
 function hookUpdate() {

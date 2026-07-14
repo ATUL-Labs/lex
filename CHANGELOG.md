@@ -2,6 +2,17 @@
 
 All notable changes to lex. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.16] - 2026-07-14
+
+### Added
+- **`lex init` copies agent instruction files** - AGENTS.md, CLAUDE.md, GEMINI.md,
+  ANTIGRAVITY.md are now copied into each project so agents discover lex automatically.
+- **Global install support for pre-commit hook** - hook now falls back to
+  `require.resolve('@atul-labs/lex/bin/lex.js')` and the global install path,
+  not just local `find` in the project.
+- **`isGlobalInstall()` helper** - detects if lex is running from a global npm install
+  and shows `lex serve` instead of the full path in init output.
+
 ## [0.1.15] - 2026-07-14
 
 ### Added
