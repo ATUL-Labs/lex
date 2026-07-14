@@ -688,6 +688,11 @@ function patchCmd(root, args) {
 
 async function main() {
   const [cmd, ...args] = process.argv.slice(2);
+  if (cmd === '--version' || cmd === '-v') {
+    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+    process.stdout.write('lex v' + pkg.version + '\n');
+    return;
+  }
   if (cmd === 'hook-update') return hookUpdate();
   if (cmd === 'docs') return docsCmd(args);
   if (cmd === 'init') return initCmd(args[0] || process.cwd());

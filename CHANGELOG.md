@@ -2,6 +2,11 @@
 
 All notable changes to lex. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.18] - 2026-07-14
+
+### Added
+- **`lex --version` / `lex -v`** - prints version number from package.json.
+
 ## [0.1.17] - 2026-07-14
 
 ### Added
