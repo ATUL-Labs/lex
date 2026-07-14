@@ -1,6 +1,6 @@
 {
   "name": "lex",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "description": "Universal coding companion - reasoning, efficient code, design intelligence, project memory, crash recovery.",
   "sessionStart": {
     "skill": "using-lex"

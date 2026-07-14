@@ -697,6 +697,19 @@ async function main() {
   if (cmd === 'docs') return docsCmd(args);
   if (cmd === 'init') return initCmd(args[0] || process.cwd());
   if (cmd === 'guard') return guardCmd(findRoot(process.cwd()) || process.cwd());
+  if (cmd === 'update' && !args[0]) {
+    process.stdout.write('updating lex...\n');
+    const { execSync } = require('child_process');
+    try {
+      execSync('npm install -g @atul-labs/lex@latest --force', { stdio: 'inherit' });
+      const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+      process.stdout.write('lex updated to v' + pkg.version + '\n');
+    } catch (e) {
+      process.stderr.write('update failed: ' + e.message + '\n');
+      process.exit(1);
+    }
+    return;
+  }
   const root = findRoot(process.cwd());
   if (!root) { process.stderr.write('no .lex folder found - initialize lex first\n'); process.exit(1); }
 

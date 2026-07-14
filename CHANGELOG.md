@@ -2,6 +2,12 @@
 
 All notable changes to lex. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.19] - 2026-07-14
+
+### Added
+- **`lex update`** - self-update via npm. Runs `npm install -g @atul-labs/lex@latest`
+  and reports the new version. Works from any directory (no `.lex/` required).
+
 ## [0.1.18] - 2026-07-14
 
 ### Added
