@@ -8,7 +8,7 @@ Cross-agent project memory, enforcement rules, and a live viewer.
 Works on Claude Code, Cursor, Windsurf, Codex, Gemini, Copilot, Antigravity, Kimi, and any agent that can read files.
 
 [![Tests](https://img.shields.io/badge/tests-97%20pass-brightgreen)](#)
-[![Version](https://img.shields.io/badge/version-0.1.22-blue)](#)
+[![Version](https://img.shields.io/badge/version-0.1.23-blue)](#)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-green)](#)
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)](#)

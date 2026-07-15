@@ -2,6 +2,12 @@
 
 All notable changes to lex. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.23] - 2026-07-15
+
+### Fixed
+- **`.env` parsing on Windows** - `\r\n` line endings caused `DB_DATABASE` and
+  other env vars to not be parsed, breaking schema data viewer on Windows.
+
 ## [0.1.22] - 2026-07-15
 
 ### Added
