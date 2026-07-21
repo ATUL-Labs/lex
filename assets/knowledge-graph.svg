@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 170" fill="none">
+  <style>
+    .line{stroke:#818cf8;stroke-width:1.2;stroke-linecap:round;opacity:.3}
+    .node{fill:#1a1a1f;stroke:#818cf8;stroke-width:1.5}
+    .mem{fill:rgba(99,102,241,.15);stroke:#818cf8;stroke-width:1.5}
+    .term{fill:#6366f1;stroke:#6366f1;stroke-width:1.5}
+    .label{font-family:'JetBrains Mono',monospace;font-size:10px;fill:#a1a1aa}
+    .accent{fill:#818cf8}
+  </style>
+  <line class="line" x1="40" y1="70" x2="150" y2="30"/>
+  <line class="line" x1="40" y1="70" x2="150" y2="90"/>
+  <line class="line" x1="40" y1="70" x2="150" y2="140"/>
+  <line class="line" x1="150" y1="90" x2="280" y2="55"/>
+  <line class="line" x1="150" y1="30" x2="280" y2="115"/>
+  <line class="line" x1="280" y1="55" x2="400" y2="40"/>
+  <line class="line" x1="280" y1="115" x2="400" y2="100"/>
+  <circle class="term" cx="40" cy="70" r="7"/>
+  <text class="label accent" x="58" y="74" font-weight="600">auth</text>
+  <circle class="node" cx="150" cy="30" r="4"/>
+  <text class="label" x="162" y="34">validateToken</text>
+  <circle class="node" cx="150" cy="90" r="4"/>
+  <text class="label" x="162" y="94">login</text>
+  <circle class="node" cx="150" cy="140" r="4"/>
+  <text class="label" x="162" y="144">refreshToken</text>
+  <circle class="mem" cx="280" cy="55" r="5"/>
+  <text class="label accent" x="292" y="59">mistakes.md</text>
+  <circle class="mem" cx="280" cy="115" r="5"/>
+  <text class="label accent" x="292" y="119">patterns.md</text>
+  <circle class="node" cx="400" cy="40" r="3"/>
+  <text class="label" x="410" y="44">JWT</text>
+  <circle class="node" cx="400" cy="100" r="3"/>
+  <text class="label" x="410" y="104">middleware</text>
+</svg>

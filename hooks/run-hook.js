@@ -38,6 +38,14 @@ function detectPlatform() {
   return 'unknown';
 }
 
+function detectAgent() {
+  if (process.env.CLAUDE_PLUGIN_ROOT && !process.env.COPILOT_CLI) return 'claude';
+  if (process.env.CURSOR_PLUGIN_ROOT) return 'cursor';
+  if (process.env.COPILOT_CLI) return 'copilot';
+  if (process.env.WINDSURF_PROJECT_DIR) return 'windsurf';
+  return 'unknown';
+}
+
 function runSessionStart() {
   const bootstrap = path.join(pluginRoot, 'skills', 'using-lex', 'BOOTSTRAP.md');
   if (!fs.existsSync(bootstrap)) {
@@ -217,7 +225,9 @@ function runPostToolUse() {
 
   if (config.auto_audit_log && file) {
     const now = new Date().toISOString().replace('T', ' ').slice(0, 16);
-    try { fs.appendFileSync(path.join(root, '.lex', 'audit.log'), now + ' | agent | platform | ' + tool + ' | ' + file + '\n'); } catch {}
+    const agent = detectAgent();
+    const platform = detectPlatform();
+    try { fs.appendFileSync(path.join(root, '.lex', 'audit.log'), now + ' | ' + agent + ' | ' + platform + ' | ' + tool + ' | ' + file + '\n'); } catch {}
   }
 
   if (config.warn_no_wip_on_edit && !fs.existsSync(path.join(root, '.lex', 'wip.md'))) {

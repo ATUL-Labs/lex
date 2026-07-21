@@ -1,29 +1,25 @@
 <div align="center">
 
-# lex
+<img src="docs/images/lex-hero.svg" alt="lex — The shared brain for AI coding agents" width="100%">
 
-### The shared brain for AI coding agents.
-
-Cross-agent project memory, enforcement rules, and a live viewer.  
-Works on Claude Code, Cursor, Windsurf, Codex, Gemini, Copilot, Antigravity, Kimi, and any agent that can read files.
-
-[![Tests](https://img.shields.io/badge/tests-97%20pass-brightgreen)](#)
-[![Version](https://img.shields.io/badge/version-0.1.23-blue)](#)
+[![Tests](https://img.shields.io/badge/tests-169%20pass-brightgreen)](#)
+[![Version](https://img.shields.io/badge/version-0.1.24-blue)](#)
+[![Stability](https://img.shields.io/badge/stability-stable-blue)](#)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-green)](#)
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)](#)
 [![Platforms](https://img.shields.io/badge/platforms-9%2B-informational)](#platform-support)
 
-[Quick Start](#quick-start) &bull; [CLI](#cli) &bull; [Gateway](#gateway) &bull; [Viewer](#viewer) &bull; [Skills](#skills) &bull; [Docs](#docs)
+[Quick Start](#quick-start) &bull; [CLI](#cli) &bull; [Gateway](#gateway-zero-approval-commands) &bull; [Viewer](#viewer) &bull; [Skills](#skills) &bull; [Docs](#docs)
 
 </div>
 
----
+<br>
 
 ## The problem
 
 You're building a feature in Claude Code. You hit a usage limit mid-task. You open
-Cursor, or Windsurf, or Trae - and now you're explaining everything again. What you
+Cursor, or Windsurf, or Trae — and now you're explaining everything again. What you
 were doing. What you already tried. What broke last time. The new agent has no memory
 of the last one.
 
@@ -36,8 +32,26 @@ memory.** The chat is disposable. `.lex/` is not.
 ### The test lex is built to pass
 
 > Start a task in Claude Code. Close it mid-way. Open Cursor. Type "continue".  
-> The agent picks up exactly where the last one left off - same knowledge, same
+> The agent picks up exactly where the last one left off — same knowledge, same
 > discipline, same taste, on a completely different tool, with zero re-explaining.
+
+---
+
+## What's new in 0.1.24
+
+| Feature | Description |
+|---------|-------------|
+| **API security scanner** | `lex test <url>` — sends requests, scans for missing headers, SQL errors, XSS reflection, info disclosure |
+| **Dev loop** | `lex devloop` — tests all indexed endpoints with smart categories (OK, auth-required, not-found, server-error) |
+| **Diff mode** | `lex devloop --diff` — compares to last run, shows only what changed |
+| **Auth support** | `lex devloop --cookie=...` or `--token=...` — test protected routes |
+| **Auto port detection** | Reads `run.md`, `.env`, `agent.json`, `docker-compose.yml`. Probes IPv4 + IPv6 |
+| **Expected findings filter** | HSTS suppressed on HTTP dev servers (only flagged on HTTPS) |
+| **Actionable summary** | "5 OK, 55 require auth, 0 errors" instead of "5 passed, 95 failed" |
+| **Gateway expansion** | 30+ commands (was 18). Added `test`, `devloop`, `convert`, `integrity`, `chain`, `task` |
+| **Image converter** | `lex convert hero.svg hero.png` — SVG to PNG/WebP/ICO via headless Chrome. Multi-size ICO for favicons |
+
+Full changelog: [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
@@ -65,6 +79,9 @@ node bin/lex.js guard
 
 # Search without reading files
 node bin/lex.js search "userTask overdue"
+
+# Test all endpoints with smart categorization
+node bin/lex.js devloop
 ```
 
 ---
@@ -93,26 +110,91 @@ Full benchmarks: [docs/benchmarks.md](docs/benchmarks.md)
 
 ---
 
+<br>
+
 ## What it does
 
-| Feature | What it means |
-|---------|---------------|
-| **Continuity engine** | Three-layer state protection - `wip.md` checkpoints, ~80% context flush, hooks. Sessions survive compaction, crashes, and handoffs to a different agent |
-| **Enforcement** | PostToolUse hook warns if `wip.md` missing, auto-logs edits to `audit.log`. Git pre-commit hook runs `lex guard` and blocks on CRITICAL violations |
-| **Project memory** | `.lex/` folder with knowledge pages, session summaries, audit trail. Any agent that can read a file gets the full picture |
-| **lex-index** | Self-maintaining SQLite index - `search`, `symbols`, API-to-frontend `links`, DB schema map. Zero tokens to maintain |
-| **lex guard** | Scans for exposed secrets (CRITICAL) and DB anti-patterns (IMPORTANT) before every commit |
-| **Browser audit** | `lex audit` launches headless Chrome/Edge, crawls all internal pages, captures console errors + network failures. Supports login automation via `.lex/audit.json` |
-| **Live viewer** | `lex serve` opens a mission-control dashboard - live status, task list, knowledge, schema, search, agent activity |
-| **Reasoning skills** | 16 skills: brainstorming, planning, TDD, debugging, verification, code review, and more |
-| **Stack overlays** | PHP? Agent uses Xdebug. Rust? Agent uses `dbg!` and audits `unsafe`. 5 overlay packs auto-detect at `lex init` |
-| **Gateway** | 18 commands via `write_to_file` — zero user approval, zero shell quoting |
-| **Zero dependencies** | Pure markdown + one small Node script. No build step, no server, nothing to update |
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### Memory & Continuity
+
+**Continuity engine** — `wip.md` checkpoints, ~80% context flush, hooks. Sessions survive compaction, crashes, and handoffs.
+
+**Project memory** — `.lex/` folder with knowledge pages, session summaries, audit trail. Any agent that can read a file gets the full picture.
+
+**Crash recovery** — the next agent resumes exactly where the last one left off.
+
+```bash
+$ lex status
+# → .lex/wip.md found — resuming task
+# → Step 3 of 5: implement auth middleware
+# → Last edit: src/auth.js (2m ago)
+```
+
+</td>
+<td width="50%" valign="top">
+
+### Code Intelligence
+
+**lex-index** — self-maintaining SQLite index. Zero tokens to maintain.
+
+```bash
+$ lex search validateToken
+# → lib/auth.js:42  function validateToken()
+# → tests/auth.test.js:88  test('rejects expired')
+# 2 files, ~248 tokens
+```
+
+**lex guard** — scans for exposed secrets + DB anti-patterns before every commit.
+
+**Browser audit** — headless Chrome/Edge crawls all pages, captures console + network errors.
+
+**API tester** — `lex test <url>` runs security scan: missing headers, SQL errors, XSS, info disclosure.
+
+**Dev loop** — `lex devloop` tests all endpoints with smart categories: OK, auth-required, not-found, server-error.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### Agent Tools
+
+**Reasoning skills** — 16 skills: brainstorming, planning, TDD, debugging, verification, code review, and more. Each with a `HARD-GATE` — written answers required before proceeding.
+
+**Stack overlays** — PHP? Agent uses Xdebug. Rust? Agent uses `dbg!` and audits `unsafe`. 5 overlay packs auto-detect at `lex init`.
+
+**Image converter** — `lex convert hero.svg hero.png` — SVG to PNG/WebP/ICO via headless Chrome.
+
+</td>
+<td width="50%" valign="top">
+
+### Infrastructure
+
+**Gateway** — 30+ commands via `write_to_file` — zero user approval, zero shell quoting.
+
+```bash
+# Agent writes this:
+write_to_file('.lex/in/r.json', 'search auth')
+# Result auto-injected as context. No approval needed.
+```
+
+**Live viewer** — `lex serve` opens a mission-control dashboard: status, task list, knowledge, schema, search, agent activity, API tester.
+
+**Zero dependencies** — pure markdown + one small Node script. No build step, no server, nothing to update.
+
+</td>
+</tr>
+</table>
 
 One plugin replaces the separate reasoning, style, and memory tools you'd otherwise
-stitch together - and it works identically on **9+ platforms**.
+stitch together — and it works identically on **9+ platforms**.
 
 ---
+
+<br>
 
 ## Quick Start
 
@@ -198,6 +280,8 @@ the current task.
 
 ---
 
+<br>
+
 ## CLI
 
 Requires Node 22+.
@@ -214,6 +298,9 @@ node <lex-repo>/bin/lex.js links dashboard/tasks     # route + every frontend co
 node <lex-repo>/bin/lex.js recent 20                 # recently modified files from audit log
 node <lex-repo>/bin/lex.js errors                    # console errors captured from browser
 node <lex-repo>/bin/lex.js audit [urls...]           # headless browser audit (auto-detects dev server)
+node <lex-repo>/bin/lex.js test <url> [method]       # send request + security scan (headers, SQL, XSS)
+node <lex-repo>/bin/lex.js devloop [--diff]          # test all endpoints, categorize results
+node <lex-repo>/bin/lex.js convert <in> <out>        # SVG to PNG/WebP/ICO, PNG to ICO
 node <lex-repo>/bin/lex.js patch <file> <mode> ...   # surgical edit by anchor (saves tokens)
 node <lex-repo>/bin/lex.js ls [dir]                  # list files from index (instant)
 node <lex-repo>/bin/lex.js read <file> [start-end]   # read file with line numbers
@@ -319,7 +406,107 @@ Via gateway (no approval needed):
 write_to_file('.lex/in/audit.json', '', true)  # auto-detect URLs, crawl all pages
 ```
 
-### Gateway: zero-approval lex commands
+### `test` — API endpoint security scanner
+
+```bash
+# Test a single endpoint
+lex test http://localhost:3000/api/users
+lex test http://localhost:3000/api/users POST
+
+# XSS scan
+lex test http://localhost:3000/search?q=test --xss
+```
+
+Sends an HTTP request and runs a security scan on the response:
+- **Missing security headers** — CSP, X-Frame-Options, HSTS, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy
+- **SQL error signatures** — SQLSTATE, PDOException, MySQL errors, SQLite errors, syntax errors
+- **Information disclosure** — stack traces, framework version leaks, debug mode, X-Powered-By
+- **XSS reflection** — injected parameters reflected without encoding
+
+Via gateway:
+```
+write_to_file('.lex/in/r.json', 'test http://localhost:3000/api/users GET')
+```
+
+### `devloop` — test all endpoints at once
+
+```bash
+# Test all indexed endpoints
+lex devloop
+
+# Compare to previous run (shows what changed)
+lex devloop --diff
+
+# Test with authentication
+lex devloop --cookie="session=abc123"
+lex devloop --token="Bearer eyJhbG..."
+
+# Filter to endpoints from a specific file
+lex devloop src/api/auth.js
+```
+
+Tests every route and API consumer found in the index. Each endpoint gets a category:
+
+| Category | Meaning | Counts as |
+|----------|---------|-----------|
+| `pass` | 200-299 | OK |
+| `auth-required` | 302→/login, 401, 403, 419 | OK (expected) |
+| `redirect` | 302 to non-auth URL | OK |
+| `not-found` | 404 | Fail |
+| `method-not-allowed` | 405 | OK |
+| `server-error` | 500+ | Fail |
+| `connection-error` | ECONNREFUSED | Fail |
+
+**Smart summary** — instead of "72 failed", you get:
+```
+100 endpoints tested: 5 OK, 55 require auth, 38 not found, 2 method not allowed, 2 findings, 0 actionable errors
+```
+
+**Diff mode** — compares to the last run's `.lex/devloop.json`:
+```
+3 changed, 0 new, 0 removed, -3 errors, +0 findings
+  get /research: 500 server-error -> 200 pass
+  post /journals: 419 csrf-required -> 200 pass
+```
+
+**Expected findings filter** — HSTS is suppressed on HTTP dev servers (only flagged on HTTPS).
+
+**Auto port detection** — reads `.lex/pages/run.md`, `.lex/agent.json`, `.env`, and `docker-compose.yml` to find the app's actual port. Probes both IPv4 and IPv6 localhost.
+
+Via gateway:
+```
+write_to_file('.lex/in/r.json', 'devloop')
+write_to_file('.lex/in/r.json', 'devloop --diff')
+```
+
+### `convert` — SVG to PNG/WebP/ICO
+
+```bash
+# SVG to PNG (2x retina)
+lex convert hero.svg hero.png --width=1200 --height=630 --scale=2
+
+# SVG to WebP (17x smaller than PNG)
+lex convert hero.svg hero.webp --width=1200 --height=630
+
+# SVG to single-size ICO (favicon)
+lex convert logo.svg favicon.ico --size=32
+
+# SVG to multi-size ICO (16, 32, 48, 64, 128, 256)
+lex convert logo.svg favicon.ico --multi
+
+# PNG to ICO
+lex convert logo.png favicon.ico --multi
+```
+
+Renders SVG using headless Chrome/Edge via CDP (same zero-dependency approach as `lex audit`). ICO encoder is pure JS — wraps PNG data in ICO container format. Multi-size ICO includes all standard favicon sizes in one file.
+
+Via gateway:
+```
+write_to_file('.lex/in/r.json', 'convert hero.svg hero.png')
+write_to_file('.lex/in/req.json', '{"cmd":"convert","args":{"input":"logo.svg","output":"favicon.ico","multi":true}}')
+```
+
+### Gateway: zero-approval commands
 
 The gateway lets agents use lex **without `run_command`** — no user approval,
 no shell quoting, no PowerShell escaping. The agent writes a request to
@@ -340,9 +527,10 @@ write_to_file('.lex/in/r.json', 'grep res\\.status|src/app.js')
 write_to_file('.lex/in/req.json', '{"cmd":"search","args":["InputError"]}')
 ```
 
-**18 commands available:** `search`, `symbols`, `grep`, `read`, `patch`,
-`insert`, `rename`, `delete`, `batch`, `diff`, `errors`, `audit`, `undo`,
-`snapshot`, `refs`, `recent`, `links`, `guard`.
+**30+ commands available:** `search`, `memory`, `recall`, `episode`, `note`, `docs`,
+`proactive`, `symbols`, `grep`, `read`, `patch`, `insert`, `rename`, `delete`, `batch`,
+`chain`, `task`, `synth`, `check`, `diff`, `errors`, `audit`, `integrity`, `test`,
+`devloop`, `convert`, `undo`, `snapshot`, `refs`, `recent`, `links`, `guard`, `decay`, `assoc`.
 
 | Feature | Gateway (`write_to_file`) | CLI (`run_command`) |
 |---------|--------------------------|---------------------|
@@ -357,6 +545,8 @@ and enables **batching** (2 commands in 1 call saves 24%).
 
 ---
 
+<br>
+
 ## Viewer
 
 ```bash
@@ -364,13 +554,35 @@ node <lex-repo>/bin/lex.js serve        # http://127.0.0.1:4747
 node <lex-repo>/bin/lex.js serve 3000   # specific port
 ```
 
-Live mission-control dashboard: status, task list, full-text search, API link graph,
-schema ERD, knowledge pages, agent activity timeline. Dark/light theme, collapsible
-panels. Read-only and localhost-bound.
+A live mission-control dashboard for your project. Here's what you can do:
 
-Details: [docs/viewer.md](docs/viewer.md)
+**Monitor**
+- **App server status** — auto-detects your app's port from `run.md`, `.env`, `docker-compose.yml`. Live green/red indicator, polls every 10s
+- **Agent activity timeline** — see every file edit, search, and command your AI agent has run
+- **Current task list** — live view of `wip.md` steps and their status
+
+**Explore code**
+- **Full-text search** — search the entire codebase without opening files. Results show file, line number, and context
+- **API link graph** — visual graph of every API route and its frontend consumers. Filter by URL, color-coded by HTTP method
+- **Schema ERD** — tables, columns, foreign keys from real migrations. Fullscreen pannable/zoomable canvas
+- **Symbol browser** — list functions, classes, and exports in any file without reading it
+
+**Test & secure**
+- **API tester** — send requests to any endpoint, get security scan with findings categorized by severity (High/Medium/Low). URL auto-populates from detected app server
+- **Dev loop** — one click tests all indexed endpoints. Smart categories: OK, auth-required, not-found, server-error. Actionable summary instead of raw pass/fail
+- **Console errors** — captures `console.error`, uncaught exceptions, and network failures from your dev pages
+
+**Knowledge**
+- **Knowledge pages** — browse `.lex/pages/` with rendered markdown (stack.md, mistakes.md, patterns.md, design.md, rules.md)
+- **Session summaries** — read past agent sessions to see what was done and why
+
+Dark/light theme toggle. Collapsible panels — show only what you need. Read-only and localhost-bound — never modifies your project.
+
+Full details: [docs/viewer.md](docs/viewer.md)
 
 ---
+
+<br>
 
 ## Skills
 
@@ -382,7 +594,11 @@ Full skill catalog: [docs/skills.md](docs/skills.md)
 
 ---
 
+<br>
+
 ## How It Works
+
+<img src="docs/images/lex-architecture.svg" alt="lex architecture: .lex/ folder structure and agent flow" width="100%">
 
 `.lex/` folder in each project root stores: `status.md` (current state), `wip.md`
 (work-in-progress, exists only during active work), `INDEX.md` (knowledge table of
@@ -398,6 +614,8 @@ pre-commit hook runs `lex guard` and blocks on CRITICAL violations.
 Full architecture: [docs/how-it-works.md](docs/how-it-works.md)
 
 ---
+
+<br>
 
 ## Platform Support
 
@@ -415,6 +633,8 @@ Full architecture: [docs/how-it-works.md](docs/how-it-works.md)
 | **Any agent** | Reads `skills/using-lex/SKILL.md` | Drop `skills/` in project root |
 
 ---
+
+<br>
 
 ## Optional: code graph upgrade
 
@@ -438,22 +658,26 @@ lex works fully without it - skills prefer the graph when connected, fall back t
 
 ---
 
+<br>
+
 ## Docs
 
 - [benchmarks.md](docs/benchmarks.md) — speed, token savings, gateway overhead, test results
 - [skills.md](docs/skills.md) — full skill catalog, stack overlays
 - [how-it-works.md](docs/how-it-works.md) — `.lex/` folder, crash recovery, enforcement, file structure
-- [viewer.md](docs/viewer.md) — panel details, console error capture
+- [viewer.md](docs/viewer.md) — panel details, API tester, dev loop, app server status, console error capture
 - [upgrading.md](docs/upgrading.md) — safe upgrade path, no data loss
 - [CHANGELOG.md](CHANGELOG.md) — version history
 
 ---
 
+<br>
+
 ## Acknowledgments
 
 - Cross-platform plugin delivery pattern inspired by [superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT)
 - Efficient code ladder inspired by [ponytail](https://github.com/DietrichGebert/ponytail)
-
+- README design principles from [beautify-github-readme](https://github.com/oil-oil/beautify-github-readme)
 
 All skill content is original.
 

@@ -12,6 +12,10 @@ index.html
 !.env.example
 !.env.template
 .lex/index.db*
+.lex/memory.db
+.lex/pages.db
+.lex/links.json
+.lex/devloop.json
 .lex/live.json
 .lex/token-ledger.json
 .lex/trash/
@@ -20,3 +24,8 @@ index.html
 .lex/out/
 .lex/server.json
 .lex/audit.json
+--help/
+landing.html
+landing-react.html
+design-test.html
+docs.html

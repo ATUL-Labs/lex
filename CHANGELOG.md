@@ -2,6 +2,48 @@
 
 All notable changes to lex. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.24] - 2026-07-21
+
+### Added
+- **API security scanner** — `lex test <url> [method]` sends HTTP requests and runs
+  security scan: missing headers (CSP, X-Frame-Options, HSTS, X-Content-Type-Options,
+  X-XSS-Protection, Referrer-Policy, Permissions-Policy), SQL error signatures,
+  information disclosure (stack traces, framework leaks, debug mode, X-Powered-By),
+  XSS reflection detection. `--xss` flag for dedicated XSS scan.
+- **Dev loop** — `lex devloop` tests all indexed endpoints with smart categorization:
+  `pass` (200-299), `auth-required` (302→/login, 401, 403, 419), `redirect`,
+  `not-found` (404), `method-not-allowed` (405), `server-error` (500+),
+  `connection-error` (ECONNREFUSED). Saves report to `.lex/devloop.json`.
+- **Diff mode** — `lex devloop --diff` compares current run to previous, shows
+  changed/new/removed endpoints and error/finding deltas.
+- **Auth support** — `lex devloop --cookie="session=..."` and `--token="Bearer ..."`
+  pass authentication to test protected routes.
+- **Auto port detection** — reads `.lex/agent.json`, `.lex/pages/run.md`, `.env`,
+  `docker-compose.yml`, and source code to find app's actual port. Probes both
+  IPv4 (127.0.0.1) and IPv6 ([::1]) localhost.
+- **App server status indicator** — viewer shows live green/red status for the
+  detected app server. Polls every 10 seconds.
+- **API tester in viewer UI** — send requests, get security scan results with
+  severity-categorized findings. URL auto-populates from detected app URL.
+- **Dev loop in viewer UI** — one-click test all endpoints with categorized results.
+- **Gateway expansion** — added `test`, `devloop`, `convert`, `integrity`, `chain`, `task`
+  commands. Total: 30+ gateway commands.
+- **Image converter** — `lex convert <input> <output>` converts SVG to PNG, WebP, or ICO
+  using headless Chrome CDP rendering. PNG to ICO also supported. Multi-size ICO
+  (`--multi`) generates 16, 32, 48, 64, 128, 256px in one file. Pure JS ICO encoder.
+  Zero dependencies.
+
+### Fixed
+- **SQL injection false positives** — security scan now operates on truncated body
+  (50K) instead of full response body (800K+). Tightened SQL error signature regex
+  to require error context, not just "MySQL" alone.
+- **HSTS on HTTP** — `Missing strict-transport-security header` finding is now
+  suppressed on HTTP dev servers (only flagged on HTTPS).
+- **Smart pass/fail** — 302 redirects to `/login` classified as `auth-required`
+  (OK) instead of `fail`. 401/403/419 also classified as `auth-required`.
+- **Actionable summary** — dev loop reports "5 OK, 55 require auth, 0 errors"
+  instead of "5 passed, 95 failed".
+
 ## [0.1.23] - 2026-07-15
 
 ### Fixed

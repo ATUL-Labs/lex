@@ -21,16 +21,16 @@ function makeProject() {
   return root;
 }
 
-test('refresh indexes code and lex pages, skips sessions/node_modules/binaries', () => {
+test('refresh indexes code and lex status, skips pages/sessions/node_modules/binaries', () => {
   const root = makeProject();
   const db = openDb(root);
   const r = refresh(db, root);
-  assert.equal(r.indexed, 3);
+  assert.equal(r.indexed, 2);
   const paths = db.prepare('SELECT path FROM files ORDER BY path').all().map(x => x.path);
-  assert.deepEqual(paths, ['.lex/pages/mistakes.md', '.lex/status.md', 'src/app.js']);
+  assert.deepEqual(paths, ['.lex/status.md', 'src/app.js']);
   assert.ok(db.prepare("SELECT 1 FROM symbols WHERE name='greet' AND path='src/app.js'").get());
-  const hit = db.prepare("SELECT path FROM content_fts WHERE content_fts MATCH 'orWhere'").get();
-  assert.equal(hit.path, '.lex/pages/mistakes.md');
+  const hit = db.prepare("SELECT path FROM content_fts WHERE content_fts MATCH 'greet'").get();
+  assert.equal(hit.path, 'src/app.js');
 });
 
 test('refresh is incremental: unchanged files are not re-indexed', () => {

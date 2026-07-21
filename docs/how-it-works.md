@@ -122,6 +122,10 @@ lex/
     tokens.js                     # Token ledger tracking
     gateway.js                    # Zero-approval gateway command processor
     fetch.js                      # HTTP fetch helper for gateway errors command
+    api-tester.js                 # API security scanner (headers, SQL, XSS, info disclosure)
+    dev-loop.js                   # Endpoint tester with smart categorization, diff, auth
+    image-convert.js              # SVG to PNG/WebP/ICO converter via headless Chrome CDP
+    browser-detect.js             # Cross-platform Chrome/Edge/Brave path detection
 
   bin/
     lex.js                        # CLI entry point
