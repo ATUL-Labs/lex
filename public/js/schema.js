@@ -7,10 +7,33 @@ function renderSchemaCard(table) {
   card.appendChild(textEl('div', table.name, 'schema-card-title'));
   table.columns.forEach(function (col) {
     var row = textEl('div', null, 'schema-col');
-    row.appendChild(textEl('span', col.name, 'schema-col-name'));
-    row.appendChild(textEl('span', col.type || '', 'schema-col-type'));
+
+    // Badges (PK, UQ, IDX)
+    var badges = textEl('span', null, 'schema-col-badges');
+    if (col.isPk) badges.appendChild(textEl('span', 'PK', 'col-badge col-badge-pk'));
+    if (col.isUnique) badges.appendChild(textEl('span', 'UQ', 'col-badge col-badge-uq'));
+    if (col.isIndex) badges.appendChild(textEl('span', 'IDX', 'col-badge col-badge-idx'));
+    if (badges.children.length) row.appendChild(badges);
+
+    row.appendChild(textEl('span', col.name, 'schema-col-name' + (col.isPk ? ' col-name-pk' : '')));
+
+    // Type — show enum values if available
+    var typeText = col.type || '';
+    if (col.enumValues) typeText = 'enum(' + col.enumValues + ')';
+    row.appendChild(textEl('span', typeText, 'schema-col-type'));
+
+    // Nullable indicator
+    if (!col.isNullable && !col.isPk) row.appendChild(textEl('span', 'NOT NULL', 'col-nullable'));
+    else if (col.isNullable && !col.isPk) row.appendChild(textEl('span', 'null', 'col-nullable-yes'));
+
+    // Default value
+    if (col.defaultVal !== null && col.defaultVal !== undefined) {
+      row.appendChild(textEl('span', '=' + col.defaultVal, 'col-default'));
+    }
+
+    // FK arrow
     if (col.fkTable) {
-      row.appendChild(textEl('span', '→ ' + col.fkTable, 'schema-col-fk'));
+      row.appendChild(textEl('span', '\u2192 ' + col.fkTable, 'schema-col-fk'));
     }
     card.appendChild(row);
   });
@@ -190,12 +213,18 @@ function renderSchema(tables, filterQuery) {
 }
 
 qs('schema-filter').addEventListener('input', function (e) {
-  renderSchema(state.schemaTables, e.target.value);
+  var tables = state.schemaSource === 'live' ? state.liveDbTables : state.schemaTables;
+  renderSchema(tables, e.target.value);
 });
 
 window.addEventListener('resize', function () {
-  if (state.schemaTables.length) drawSchemaLines(state.schemaTables);
+  var tables = state.schemaSource === 'live' ? state.liveDbTables : state.schemaTables;
+  if (tables.length) drawSchemaLines(tables);
 });
+
+function getActiveSchemaTables() {
+  return state.schemaSource === 'live' ? state.liveDbTables : state.schemaTables;
+}
 
 function fetchSchema(force) {
   var now = Date.now();
@@ -208,10 +237,79 @@ function fetchSchema(force) {
     })
     .then(function (data) {
       state.schemaTables = data.tables || [];
-      renderSchema(state.schemaTables, qs('schema-filter').value);
+      if (state.schemaSource === 'migrations') {
+        renderSchema(state.schemaTables, qs('schema-filter').value);
+      }
     })
     .catch(function () {});
 }
+
+function fetchLiveDbSchema(force) {
+  var now = Date.now();
+  if (!force && now - state.liveDbFetchedAt < 30000) return;
+  state.liveDbFetchedAt = now;
+  fetch('/api/db-schema')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (!data.connected) {
+        state.liveDbTables = [];
+        if (state.schemaSource === 'live') {
+          var host = qs('schema-content');
+          clear(host);
+          host.appendChild(textEl('div', data.error ? ('DB error: ' + data.error) : 'No database connected. Run lex config --detect to configure.', 'schema-empty'));
+        }
+        return;
+      }
+      state.liveDbTables = data.tables || [];
+      if (state.schemaSource === 'live') {
+        renderSchema(state.liveDbTables, qs('schema-filter').value);
+      }
+    })
+    .catch(function () {});
+}
+
+// Schema source toggle
+document.querySelectorAll('.src-btn').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('.src-btn').forEach(function (b) { b.classList.remove('src-btn-active'); });
+    btn.classList.add('src-btn-active');
+    state.schemaSource = btn.dataset.src;
+    if (state.schemaSource === 'live') {
+      fetchLiveDbSchema(true);
+    } else {
+      renderSchema(state.schemaTables, qs('schema-filter').value);
+    }
+  });
+});
+
+// ---------- database connection status ----------
+function fetchDbStatus() {
+  fetch('/api/db-status')
+    .then(function (r) { return r.json(); })
+    .then(function (status) {
+      var badge = qs('db-status-badge');
+      var info = qs('db-status-info');
+      if (!badge || !info) return;
+
+      if (status.connected) {
+        badge.textContent = status.type;
+        badge.className = 'db-status-badge db-connected';
+        var loc = status.path ? status.path : (status.host + ':' + status.port + '/' + status.name);
+        info.innerHTML = '<span class="db-conn-label">Connected:</span> <span class="db-conn-type">' + status.type + '</span> @ <span class="db-conn-loc">' + loc + '</span>';
+      } else if (status.configured) {
+        badge.textContent = status.type || 'config';
+        badge.className = 'db-status-badge db-disconnected';
+        info.innerHTML = '<span class="db-conn-label">Configured but not connected:</span> <span class="db-conn-type">' + (status.type || 'unknown') + '</span>';
+      } else {
+        badge.textContent = 'no db';
+        badge.className = 'db-status-badge db-none';
+        info.innerHTML = '<span class="db-conn-label">No database configured.</span> Run <code>lex config --detect</code> to auto-detect.';
+      }
+    })
+    .catch(function () {});
+}
+
+fetchDbStatus();
 
 // ---------- schema fullscreen canvas (pan / zoom / drag) ----------
 var canvas = {
@@ -469,11 +567,11 @@ qs('schema-zoom-in').addEventListener('click', function () {
 qs('schema-zoom-out').addEventListener('click', function () {
   canvasZoom(0.8, canvas.viewportEl.clientWidth / 2, canvas.viewportEl.clientHeight / 2);
 });
-qs('schema-zoom-fit').addEventListener('click', function () { canvasFit(state.schemaTables); });
+qs('schema-zoom-fit').addEventListener('click', function () { canvasFit(getActiveSchemaTables()); });
 qs('schema-layout-reset').addEventListener('click', function () {
   try { localStorage.removeItem(POS_KEY); } catch {}
-  canvasMountCards(state.schemaTables);
-  canvasFit(state.schemaTables);
+  canvasMountCards(getActiveSchemaTables());
+  canvasFit(getActiveSchemaTables());
 });
 
 qs('schema-canvas-filter').addEventListener('input', function (e) {
@@ -487,8 +585,8 @@ qs('schema-canvas-filter').addEventListener('input', function (e) {
 
 function openSchemaCanvas() {
   qs('schema-overlay').classList.add('open');
-  canvasMountCards(state.schemaTables);
-  canvasFit(state.schemaTables);
+  canvasMountCards(getActiveSchemaTables());
+  canvasFit(getActiveSchemaTables());
 }
 
 function closeSchemaCanvas() {

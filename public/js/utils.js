@@ -11,6 +11,9 @@ var state = {
   seenActivityKeys: null,
   schemaTables: [],
   schemaFetchedAt: 0,
+  schemaSource: 'migrations',
+  liveDbTables: [],
+  liveDbFetchedAt: 0,
 };
 
 function qs(id) { return document.getElementById(id); }

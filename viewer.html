@@ -66,10 +66,16 @@
   <section class="panel panel-schema fade-up" id="panel-schema" style="animation-delay:125ms">
     <div class="panel-head">
       <h2>Schema</h2>
+      <span class="db-status-badge" id="db-status-badge" title="database connection"></span>
       <button class="pane-btn" id="schema-expand" type="button" title="open fullscreen canvas">&#x26F6; expand</button>
       <button class="collapse-btn" data-panel="schema" type="button" title="collapse">&minus;</button>
     </div>
     <div class="panel-body">
+    <div class="db-status-info" id="db-status-info"></div>
+    <div class="schema-source-toggle" id="schema-source-toggle">
+      <button class="src-btn src-btn-active" data-src="migrations" type="button">Migrations</button>
+      <button class="src-btn" data-src="live" type="button">Live DB</button>
+    </div>
     <input class="search-box schema-filter" id="schema-filter" type="text" placeholder="filter by table name...">
     <div class="schema-wrap" id="schema-wrap">
       <div id="schema-content"><div class="schema-empty">no schema detected (no migrations or SQL files indexed)</div></div>

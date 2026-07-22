@@ -3,7 +3,7 @@
 <img src="docs/images/lex-hero.svg" alt="lex — The shared brain for AI coding agents" width="100%">
 
 [![Tests](https://img.shields.io/badge/tests-169%20pass-brightgreen)](#)
-[![Version](https://img.shields.io/badge/version-0.1.24-blue)](#)
+[![Version](https://img.shields.io/badge/version-0.1.25%20LTS-blue)](#)
 [![Stability](https://img.shields.io/badge/stability-stable-blue)](#)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-green)](#)
@@ -37,19 +37,19 @@ memory.** The chat is disposable. `.lex/` is not.
 
 ---
 
-## What's new in 0.1.24
+## What's new in 0.1.25 (LTS)
 
 | Feature | Description |
 |---------|-------------|
-| **API security scanner** | `lex test <url>` — sends requests, scans for missing headers, SQL errors, XSS reflection, info disclosure |
-| **Dev loop** | `lex devloop` — tests all indexed endpoints with smart categories (OK, auth-required, not-found, server-error) |
-| **Diff mode** | `lex devloop --diff` — compares to last run, shows only what changed |
-| **Auth support** | `lex devloop --cookie=...` or `--token=...` — test protected routes |
-| **Auto port detection** | Reads `run.md`, `.env`, `agent.json`, `docker-compose.yml`. Probes IPv4 + IPv6 |
-| **Expected findings filter** | HSTS suppressed on HTTP dev servers (only flagged on HTTPS) |
-| **Actionable summary** | "5 OK, 55 require auth, 0 errors" instead of "5 passed, 95 failed" |
-| **Gateway expansion** | 30+ commands (was 18). Added `test`, `devloop`, `convert`, `integrity`, `chain`, `task` |
-| **Image converter** | `lex convert hero.svg hero.png` — SVG to PNG/WebP/ICO via headless Chrome. Multi-size ICO for favicons |
+| **Live DB introspection** | Schema viewer connects to your actual database (MySQL, PostgreSQL, SQLite) — shows real tables, columns, PK, FK, indexes, enums, defaults, nullable. No migration files needed |
+| **Migrations / Live DB toggle** | Switch between parsed-migration schema and live database schema in the viewer |
+| **Rich schema metadata** | PK badges, unique constraints, index indicators, nullable flags, default values, enum types — for both migration parsing and live DB introspection |
+| **Project config system** | `.lex/config.json` — single source of truth for language, framework, database, commands, paths. Auto-detected via `lex config --detect` |
+| **Skill evolution** | `lex skills evolve` auto-generates skills from session patterns. `lex skills review --approve` to promote. Max 5 auto-skills per project |
+| **Gateway: config + skills** | `config` and `skills` commands available via gateway (zero approval) |
+| **DB status badge** | Viewer shows live database connection status (connected/configured/no-db) with type and location |
+| **AGENTS.md optimized** | 61% token reduction — gateway command table moved to on-demand `GATEWAY-REF.md` |
+| **LTS release** | Long-term support — stable API, no breaking changes until 0.2 |
 
 Full changelog: [CHANGELOG.md](CHANGELOG.md)
 
@@ -210,6 +210,11 @@ lex init          # initialize .lex/ in your project
 lex serve         # live viewer at http://localhost:4747
 lex audit         # headless browser audit of your dev server
 lex guard         # scan for exposed secrets before commit
+```
+
+**Update to the latest version:**
+```bash
+npm update -g @atul-labs/lex
 ```
 
 **Or per-platform plugin:**

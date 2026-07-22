@@ -2,6 +2,62 @@
 
 All notable changes to lex. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.25] - 2026-07-22 — LTS
+
+### Added
+- **Live DB introspection** — `queryDbSchema()` in `db-connector.js` connects to the
+  actual running database and introspects real schema. Supports SQLite (`PRAGMA table_info`,
+  `PRAGMA foreign_key_list`, `PRAGMA index_list`), MySQL (`information_schema.COLUMNS`,
+  `KEY_COLUMN_USAGE`), and PostgreSQL (`information_schema`, `pg_index`, `pg_enum`).
+  Returns tables with columns including PK, FK, unique, nullable, default, index, enum values.
+- **`/api/db-schema` endpoint** — serves live DB schema to the viewer. Returns
+  `{connected, type, tables}` or `{connected: false, error}`.
+- **Migrations / Live DB toggle** — viewer schema panel has a toggle switch between
+  migration-parsed schema and live database schema. Both use the same card rendering
+  with PK/UQ/IDX badges, nullable indicators, defaults, enum types, FK arrows.
+- **Rich schema metadata in extraction** — `extract.js` now captures `isPk`, `isUnique`,
+  `isNullable`, `isIndex`, `defaultVal`, `enumValues` for both PHP migrations and SQL files.
+  PHP: detects `$table->id()`, `->primary()`, `->unique()`, `->index()`, `->nullable()`,
+  `->default()`, `->enum()`, `->autoIncrement()`. SQL: detects `PRIMARY KEY`, `UNIQUE`,
+  `NOT NULL`, `DEFAULT`, `INDEX`, `ENUM()`, `AUTOINCREMENT`/`AUTO_INCREMENT`.
+- **Schema column migration** — `indexer.js` auto-migrates existing `schema_columns` table
+  via `ALTER TABLE ADD COLUMN` for all new fields. No data loss on upgrade.
+- **Project config system** — `.lex/config.json` as single source of truth for language,
+  framework, database, commands, paths, skip_dirs, schema_formats. Auto-detected by
+  `lex config --detect`. Read by `lex check`, `db-connector.js`, `indexer.js`.
+- **`lex config` CLI** — `lex config` (print), `lex config --detect` (refresh),
+  `lex config --set key value` (manual override).
+- **`lex skills evolve`** — auto-generates skills from session patterns (3+ occurrences).
+  Auto-skills go to `.lex/skills/` with `auto-generated: true`, max 5 per project.
+- **`lex skills review`** — review and approve auto-generated skills.
+- **Gateway: `config` and `skills` commands** — agents can manage project config and
+  skill evolution via gateway (zero approval).
+- **DB status badge in viewer** — shows live database connection status with type
+  (sqlite/mysql/postgres) and location. Green=connected, amber=configured, grey=no-db.
+- **`GATEWAY-REF.md`** — on-demand reference for gateway command table, patch modes,
+  and examples. Loaded only when agent needs to construct gateway requests.
+- **`npm update -g @atul-labs/lex`** — documented in README Quick Start.
+
+### Changed
+- **AGENTS.md optimized** — 61% token reduction (4,280 → 1,670 tokens). Gateway command
+  table moved to `GATEWAY-REF.md`. Proactive Memory, post-build verification, search,
+  and design sections compressed without losing enforcement.
+- **`/api/schema` endpoint** — now returns `isPk`, `isUnique`, `isNullable`, `isIndex`,
+  `defaultVal`, `enumValues` in column data.
+- **`renderSchemaCard`** — renders PK/UQ/IDX badges, nullable indicators, default values,
+  enum types in both inline panel and fullscreen canvas.
+- **`detectDbConfig`** — reads from `.lex/config.json` first, falls back to `.env`.
+  Returns `null` if no valid database configured (no more default `database.sqlite`).
+
+### Fixed
+- **Stale MySQL config** — `lex config --detect` no longer falsely detects MySQL for
+  non-Laravel projects. Returns `database: null` when no DB is present.
+- **`lex check`** — now verifies `config.json` existence and auto-detects/creates it
+  if missing.
+
+### LTS
+- Long-term support release. Stable API, no breaking changes until 0.2.
+
 ## [0.1.24] - 2026-07-21
 
 ### Added

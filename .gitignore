@@ -24,6 +24,7 @@ index.html
 .lex/out/
 .lex/server.json
 .lex/audit.json
+.lex/config.json
 --help/
 landing.html
 landing-react.html

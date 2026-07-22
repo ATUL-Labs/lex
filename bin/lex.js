@@ -64,6 +64,85 @@ async function main() {
   }
   if (cmd === 'guard') return metaCmds.guardCmd(findRoot(process.cwd()) || process.cwd());
 
+  if (cmd === 'config') {
+    const root = findRoot(process.cwd()) || process.cwd();
+    const projectConfig = require('../lib/project-config');
+    if (args.includes('--detect')) {
+      const detected = projectConfig.detectAll(root);
+      const existing = projectConfig.loadConfig(root);
+      const merged = projectConfig.mergeConfig(existing, detected);
+      merged.detected_at = new Date().toISOString();
+      merged.detected_by = 'lex-auto';
+      projectConfig.saveConfig(root, merged);
+      process.stdout.write('config.json updated with detected values\n');
+      process.stdout.write(JSON.stringify(merged, null, 2) + '\n');
+    } else if (args.includes('--set') && args[1] && args[2]) {
+      const config = projectConfig.loadConfig(root) || {};
+      const key = args[1];
+      let value = args[2];
+      try { value = JSON.parse(value); } catch {}
+      const parts = key.split('.');
+      let obj = config;
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!obj[parts[i]]) obj[parts[i]] = {};
+        obj = obj[parts[i]];
+      }
+      obj[parts[parts.length - 1]] = value;
+      projectConfig.saveConfig(root, config);
+      process.stdout.write('set ' + key + ' = ' + JSON.stringify(value) + '\n');
+    } else {
+      const config = projectConfig.loadConfig(root);
+      if (!config) {
+        process.stderr.write('no config.json found - run "lex init" or "lex config --detect"\n');
+        process.exit(1);
+      }
+      process.stdout.write(JSON.stringify(config, null, 2) + '\n');
+    }
+    return;
+  }
+
+  if (cmd === 'skills') {
+    const root = findRoot(process.cwd()) || process.cwd();
+    if (args[0] === 'evolve') {
+      const { evolve } = require('../lib/skill-evolve');
+      const result = evolve(root);
+      if (result.created.length) {
+        process.stdout.write('Auto-generated skills:\n');
+        for (const s of result.created) process.stdout.write('  ' + s + '\n');
+      } else {
+        process.stdout.write('No new skills generated.\n');
+      }
+      if (result.enhanced.length) {
+        process.stdout.write('Enhanced existing skills:\n');
+        for (const s of result.enhanced) process.stdout.write('  ' + s + '\n');
+      }
+      if (result.errors.length) {
+        process.stderr.write('Errors:\n');
+        for (const e of result.errors) process.stderr.write('  ' + e + '\n');
+      }
+    } else if (args[0] === 'review') {
+      const skillsDir = path.join(root, '.lex', 'skills');
+      if (!fs.existsSync(skillsDir)) { process.stdout.write('No auto-generated skills found.\n'); return; }
+      const skills = fs.readdirSync(skillsDir).filter(d => fs.statSync(path.join(skillsDir, d)).isDirectory());
+      for (const s of skills) {
+        const skillPath = path.join(skillsDir, s, 'SKILL.md');
+        if (!fs.existsSync(skillPath)) continue;
+        const content = fs.readFileSync(skillPath, 'utf8');
+        const isAuto = content.includes('auto-generated: true');
+        process.stdout.write((isAuto ? '[auto] ' : '[user] ') + s + '\n');
+        if (isAuto && args.includes('--approve')) {
+          const updated = content.replace(/auto-generated: true/, 'auto-generated: false\napproved: true');
+          fs.writeFileSync(skillPath, updated);
+          process.stdout.write('  -> approved\n');
+        }
+      }
+    } else {
+      process.stderr.write('usage: lex skills <evolve|review [--approve]>\n');
+      process.exit(1);
+    }
+    return;
+  }
+
   if (cmd === 'update' && !args[0]) {
     process.stdout.write('updating lex...\n');
     const { execSync } = require('child_process');
@@ -340,7 +419,7 @@ async function main() {
     serveWithPortFallback(require('../lib/serve').createServer(root), port, port + 8, root);
     return;
   } else {
-    process.stderr.write('usage: lex <init|migrate|guard|check|tokens|status|diff|refs|refresh|search|symbols|links|docs|grep|recent|errors|note|memory|recall|episode|proactive|synth|decay|assoc|promote|capture|audit|test|devloop|convert|patch|ls|read|write|rm|mv|stat|undo|snapshot|run|update|watch|serve|hook-update>\n');
+    process.stderr.write('usage: lex <init|config|skills|guard|check|tokens|status|diff|refs|refresh|search|symbols|links|docs|grep|recent|errors|note|memory|recall|episode|proactive|synth|decay|assoc|promote|capture|audit|test|devloop|convert|patch|ls|read|write|rm|mv|stat|undo|snapshot|run|update|watch|serve|hook-update>\n');
     process.exit(1);
   }
 }
